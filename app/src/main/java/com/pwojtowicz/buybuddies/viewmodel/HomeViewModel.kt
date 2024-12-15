@@ -1,13 +1,18 @@
 package com.pwojtowicz.buybuddies.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pwojtowicz.buybuddies.data.DataProvider.generateTestGroceryLists
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListLabel
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
+import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.entity.Home
+import com.pwojtowicz.buybuddies.data.entity.User
 import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
+import com.pwojtowicz.buybuddies.data.repository.HomeRepository
+import com.pwojtowicz.buybuddies.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +23,8 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(application: Application): ViewModel() {
     private val groceryRepository = GroceryRepository(application)
+    private val userRepository = UserRepository(application)
+    private val homeRepository = HomeRepository(application)
 
     val groceryLists = groceryRepository.getAllGroceryLists().stateIn(
         viewModelScope,
@@ -60,14 +67,33 @@ class HomeViewModel(application: Application): ViewModel() {
 
     init {
         viewModelScope.launch {
-            //TEST DATA
+            try {
+                userRepository.deleteAll()
+                groceryRepository.deleteAllGroceryItems()
+                homeRepository.deleteAll()
 
-            groceryRepository.deleteAllGroceryItems()
-            val testGroceryLists = generateTestGroceryLists()
+                val testUser = User(
+                    firebaseUid = "test_user_123",
+                    username = "Test User"
+                )
+                val userId = userRepository.insertUser(testUser)
 
-            // Insert into database
-            testGroceryLists.forEach { groceryList ->
-                groceryRepository.insertGroceryList(groceryList)
+                // Create and insert test homes
+                val testHome = Home(
+                    id = 1L,
+                    name = "Test Home",
+                    description = "Test home description",
+                    ownerId = testUser.firebaseUid
+                )
+                homeRepository.insertHome(testHome)
+
+                val testGroceryLists = generateTestGroceryLists(testUser.firebaseUid)
+                testGroceryLists.forEach { groceryList ->
+                    groceryRepository.insertGroceryList(groceryList)
+                }
+
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error during initialization", e)
             }
         }
     }
@@ -96,11 +122,8 @@ class HomeViewModel(application: Application): ViewModel() {
     }
 
 
-    fun addGroceryList(groceryList: GroceryList) {
-        viewModelScope.launch {
-            val id = groceryRepository.insertGroceryList(groceryList)
-            _newListId.value = id
-        }
+    suspend fun addGroceryList(groceryList: GroceryList): Long {
+        return groceryRepository.insertGroceryList(groceryList)
     }
 
     fun changeListOrder(currentPosition: Int, newPosition: Int) {

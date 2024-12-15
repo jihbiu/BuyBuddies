@@ -2,7 +2,6 @@ package com.pwojtowicz.buybuddies.ui.screens.home.container
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_card_border_clr
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_card_clr_light
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_main_color

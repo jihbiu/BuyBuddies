@@ -29,8 +29,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
 import com.pwojtowicz.buybuddies.ui.theme.DarkSurfaceColor
 
 @Composable

@@ -30,7 +30,8 @@ fun MenuDrawerItem(
     drawerState: DrawerState,
     coroutineScope: CoroutineScope
 ) {
-    MenuDrawerDivier()
+    MenuDrawerDivider()
+
     DrawerButton(navItem.title, navItem.icon) {
         navigateToScreenFromDrawer(
             navController,
@@ -54,12 +55,4 @@ fun DrawerButton(text: String, icon: ImageVector, onClick: () -> Unit) {
         Spacer(Modifier.width(16.dp))
         Text(text)
     }
-}
-
-@Composable fun MenuDrawerDivier(modifier: Modifier = Modifier.padding(horizontal = 16 .dp)){
-    HorizontalDivider(
-        color = Color.White,
-        thickness = 1.dp,
-        modifier = modifier
-    )
 }

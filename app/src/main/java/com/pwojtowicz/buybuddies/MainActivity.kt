@@ -15,16 +15,10 @@ import com.pwojtowicz.buybuddies.navigation.Navigation
 import com.pwojtowicz.buybuddies.ui.theme.BuyBuddiesTheme
 
 class MainActivity : ComponentActivity() {
-
-    private val authorizationClient by lazy {
-        AuthorizationClient(
-            context = applicationContext,
-            oneTapClient = Identity.getSignInClient(applicationContext)
-        )
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val app = application as BuyBuddiesApplication
+
         enableEdgeToEdge()
         setContent {
             BuyBuddiesTheme {
@@ -32,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Navigation(authorizationClient = authorizationClient)
+                    Navigation(app)
                 }
             }
         }

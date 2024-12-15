@@ -6,107 +6,135 @@ import android.content.IntentSender
 import android.util.Log
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
 import com.pwojtowicz.buybuddies.R
 import kotlinx.coroutines.tasks.await
-import kotlin.coroutines.cancellation.CancellationException
 
 class AuthorizationClient(
     private val context: Context,
     private val oneTapClient: SignInClient
 ) {
-    private val auth: FirebaseAuth = Firebase.auth
-
-    fun isUserSignedIn(): Boolean = auth.currentUser != null
-
-    fun getSignedInUser(): UserData?{
-        return auth.currentUser?.let { user ->
-            UserData(
-                userId = user.uid,
-                username = user.displayName,
-                profilePictureUrl = user.photoUrl?.toString()
-            )
-        }
-    }
-
-    suspend fun signInWithIntent(intent: Intent): SignInResult {
-        val credential = oneTapClient.getSignInCredentialFromIntent(intent)
-        val googleIdToken = credential.googleIdToken
-        val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
-        return try {
-            val user = auth.signInWithCredential(googleCredentials).await().user
-            SignInResult.Success(
-                UserData(
-                    userId = user?.uid ?: "",
-                    username = user?.displayName,
-                    profilePictureUrl = user?.photoUrl?.toString()
-                )
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during sign in with intent: ${e.message}")
-            if (e is CancellationException) throw e
-            SignInResult.Error(e.message ?: "Unknown error occurred")
-        }
-    }
+    private val auth = FirebaseAuth.getInstance()
 
     suspend fun signIn(): IntentSender? {
         val result = try {
-            oneTapClient.beginSignIn(buildSignInRequest()).await()
+            oneTapClient.beginSignIn(buildSignInRequest())
+                .await()
         } catch (e: Exception) {
-            Log.e(TAG, "Error during sign in: ${e.message}")
-            if (e is CancellationException) throw e
+            e.printStackTrace()
             null
         }
-
-        // Try Sign-Up
-        return result?.pendingIntent?.intentSender ?: run {
-            try {
-                oneTapClient.beginSignIn(buildSignUpRequest()).await().pendingIntent?.intentSender
-            } catch (e: Exception) {
-                Log.e(TAG, "Error during sign in: ${e.message}")
-                if (e is CancellationException) throw e
-                null
-            }
-        }
-    }
-
-    suspend fun signOut() {
-        try {
-            oneTapClient.signOut().await()
-            auth.signOut()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during sign out: ${e.message}")
-            if (e is CancellationException) throw e
-        }
+        return result?.pendingIntent?.intentSender
     }
 
     private fun buildSignInRequest(): BeginSignInRequest {
-        return BeginSignInRequest.builder()
+        return BeginSignInRequest.Builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
-                    .setServerClientId(context.getString(R.string.web_client_id))
                     .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.web_client_id))
                     .build()
             )
             .setAutoSelectEnabled(true)
             .build()
     }
 
-    private fun buildSignUpRequest(): BeginSignInRequest {
-        return BeginSignInRequest.builder()
-            .setGoogleIdTokenRequestOptions(
-                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    .setServerClientId(context.getString(R.string.web_client_id))
-                    .setFilterByAuthorizedAccounts(false)
-                    .build()
+    suspend fun signInWithIntent(intent: Intent): SignInResult {
+        val credential = try {
+            oneTapClient.getSignInCredentialFromIntent(intent)
+        } catch (e: Exception) {
+            return createSignInResult(
+                user = null,
+                error = e.message
             )
-            .build()
+        }
+
+        val googleIdToken = credential.googleIdToken
+        if (googleIdToken == null) {
+            return createSignInResult(
+                user = null,
+                error = "Google ID token is Null"
+            )
+        }
+
+        val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
+        return try {
+            val result = auth.signInWithCredential(googleCredentials).await()
+            createSignInResult(
+                user = result.user,
+                isNewUser = result.additionalUserInfo?.isNewUser ?: false
+            )
+        } catch (e: Exception) {
+            createSignInResult(
+                user = null,
+                error = e.message
+            )
+        }
+    }
+
+    private fun createSignInResult(
+        user: FirebaseUser?,
+        isNewUser: Boolean = false,
+        error: String? = null
+    ): SignInResult {
+        if (user == null) {
+            return SignInResult(
+                data = null,
+                errorMessage = error ?: "Unknown error occured",
+                isNewUser = false
+            )
+        }
+
+        return SignInResult(
+            data = UserData(
+                firebaseUid = user.uid,
+                username = user.displayName,
+                email = user.email,
+                profilePictureUrl = user.photoUrl?.toString()
+            ),
+            errorMessage = null,
+            isNewUser = isNewUser
+        )
+    }
+
+    suspend fun signOut() {
+        try {
+            oneTapClient.signOut().await()
+            auth.signOut()
+            context.clearFirebasePersistedData()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during sign out", e)
+        }
+    }
+
+    private fun Context.clearFirebasePersistedData() {
+        getSharedPreferences("com.google.firebase.auth.api.Store", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
+    }
+
+    fun getSignedInUser(): UserData? = auth.currentUser?.let { user ->
+        Log.d(TAG, "Firebase current user: ${user.email}")
+
+        UserData(
+            firebaseUid = user.uid,
+            username = user.displayName,
+            email = user.email,
+            profilePictureUrl = user.photoUrl?.toString()
+        )
+    }
+
+    suspend fun getIdToken(): String? {
+        return try {
+            auth.currentUser?.getIdToken(false)?.await()?.token
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during getting id token", e)
+            null
+        }
     }
 
     companion object {

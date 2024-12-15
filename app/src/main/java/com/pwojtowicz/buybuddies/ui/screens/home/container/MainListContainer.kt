@@ -11,15 +11,14 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListLabel
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
+import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
 import com.pwojtowicz.buybuddies.ui.components.ContainerCard
 
 @Composable

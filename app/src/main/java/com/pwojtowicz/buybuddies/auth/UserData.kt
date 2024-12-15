@@ -1,8 +1,9 @@
 package com.pwojtowicz.buybuddies.auth
 
 data class UserData(
-    val userId: String,
+    val firebaseUid: String,
     val username: String?,
+    val email: String?,
     val profilePictureUrl: String?
 )
 

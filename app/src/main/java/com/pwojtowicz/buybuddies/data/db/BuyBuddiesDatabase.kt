@@ -4,51 +4,73 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.pwojtowicz.buybuddies.data.dao.depot.DepotDao
-import com.pwojtowicz.buybuddies.data.dao.groceryitem.GroceryItemDao
-import com.pwojtowicz.buybuddies.data.dao.grocerylist.GroceryListDao
-import com.pwojtowicz.buybuddies.data.dao.grocerylist.GroceryListLabelDao
-import com.pwojtowicz.buybuddies.data.dao.user.UserDao
-import com.pwojtowicz.buybuddies.data.model.depot.Depot
-import com.pwojtowicz.buybuddies.data.model.groceryitem.GroceryItem
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListImage
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListLabel
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListLabelCross
-import com.pwojtowicz.buybuddies.data.model.user.User
-import com.pwojtowicz.buybuddies.data.model.user.UserAvatar
+import com.pwojtowicz.buybuddies.data.dao.DepotDao
+import com.pwojtowicz.buybuddies.data.dao.GroceryListDao
+import com.pwojtowicz.buybuddies.data.dao.GroceryListItemDao
+import com.pwojtowicz.buybuddies.data.dao.GroceryListLabelDao
+import com.pwojtowicz.buybuddies.data.dao.HomeDao
+import com.pwojtowicz.buybuddies.data.dao.HomeMemberDao
+import com.pwojtowicz.buybuddies.data.dao.ItemCategoryDao
+import com.pwojtowicz.buybuddies.data.dao.StoredItemDao
+import com.pwojtowicz.buybuddies.data.dao.UserDao
+import com.pwojtowicz.buybuddies.data.entity.Depot
+import com.pwojtowicz.buybuddies.data.entity.DepotMember
+import com.pwojtowicz.buybuddies.data.entity.FriendRequest
+import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
+import com.pwojtowicz.buybuddies.data.entity.GroceryListLabelCross
+import com.pwojtowicz.buybuddies.data.entity.GroceryListMember
+import com.pwojtowicz.buybuddies.data.entity.Home
+import com.pwojtowicz.buybuddies.data.entity.HomeMember
+import com.pwojtowicz.buybuddies.data.entity.ItemCategory
+import com.pwojtowicz.buybuddies.data.entity.StoredItem
+import com.pwojtowicz.buybuddies.data.entity.User
+import com.pwojtowicz.buybuddies.data.entity.UserAvatar
 
 @Database(
     entities = [
+        User::class,
+        UserAvatar::class,
+        FriendRequest::class,
+        Home::class,
+        HomeMember::class,
         Depot::class,
-        GroceryItem::class,
+        DepotMember::class,
         GroceryList::class,
-        GroceryListImage::class,
+        GroceryListMember::class,
         GroceryListLabel::class,
         GroceryListLabelCross::class,
-        User::class,
-        UserAvatar::class],
-    version = 1,
+        StoredItem::class,
+        GroceryListItem::class,
+        ItemCategory::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class BuyBuddiesDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+    abstract fun homeDao(): HomeDao
+    abstract fun homeMemberDao(): HomeMemberDao
+    abstract fun depotDao(): DepotDao
     abstract fun groceryListDao(): GroceryListDao
     abstract fun groceryListLabelDao(): GroceryListLabelDao
-    abstract fun groceryItemDao(): GroceryItemDao
-    abstract fun depotDao(): DepotDao
-    abstract fun userDao(): UserDao
+    abstract fun storedItemDao(): StoredItemDao
+    abstract fun groceryListItemDao(): GroceryListItemDao
+    abstract fun itemCategoryDao(): ItemCategoryDao
 
     companion object {
         @Volatile
         private var INSTANCE: BuyBuddiesDatabase? = null
 
         fun getInstance(context: Context): BuyBuddiesDatabase {
-            return INSTANCE ?: synchronized(this){
+            return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context,
                     BuyBuddiesDatabase::class.java,
                     "buybuddies_databases"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                 .build()
                 INSTANCE = instance
                 instance
             }

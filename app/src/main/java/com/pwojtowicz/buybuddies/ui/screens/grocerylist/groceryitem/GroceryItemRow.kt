@@ -29,7 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pwojtowicz.buybuddies.data.model.groceryitem.GroceryItem
+import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
 import com.pwojtowicz.buybuddies.ui.components.BBDropdownMenu
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_background_clr_light
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_main_selected_clr
@@ -38,14 +38,14 @@ import com.pwojtowicz.buybuddies.ui.theme.bb_theme_text_clr_gray
 
 @Composable
 fun GroceryItemRow(
-    groceryItem: GroceryItem,
+    groceryListItem: GroceryListItem,
     onCheckedChange: (Boolean) -> Unit,
-    onSaveChanges: (GroceryItem) -> Unit,
+    onSaveChanges: (GroceryListItem) -> Unit,
     onDelete: () -> Unit
 ) {
-    var name by remember { mutableStateOf(groceryItem.name) }
-    var quantity by remember { mutableStateOf(groceryItem.quantity.toString()) }
-    var checked by remember { mutableStateOf(groceryItem.isChecked) }
+    var name by remember { mutableStateOf(groceryListItem.name) }
+    var quantity by remember { mutableStateOf(groceryListItem.quantity.toString()) }
+    var checked by remember { mutableStateOf(groceryListItem.isChecked) }
 
     var editable by remember { mutableStateOf(false) }
     var colorEditable by remember { mutableStateOf(bb_theme_text_clr_gray) }
@@ -130,9 +130,9 @@ fun GroceryItemRow(
                         text = { Text(if (editable) "Save" else "Edit") },
                         onClick = {
                             if (editable) {
-                                val updatedItem = groceryItem.copy(
+                                val updatedItem = groceryListItem.copy(
                                     name = name,
-                                    quantity = quantity.toIntOrNull() ?: 0,
+                                    quantity = quantity.toDoubleOrNull() ?: 0.0,
                                     isChecked = checked,
                                 )
                                 onSaveChanges(updatedItem)

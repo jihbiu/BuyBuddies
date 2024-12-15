@@ -1,9 +1,7 @@
 package com.pwojtowicz.buybuddies.ui.screens.home
 
 import android.app.Application
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,7 +22,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,7 +31,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.GroceryListMenuSheet
@@ -87,11 +84,6 @@ fun HomeScreen(
             .padding(paddingValues)
             .nestedScroll(nestedScrollConnection)
     ) {
-//        Column(Modifier.pointerInput(Unit) {
-//            detectTapGestures(onTap = {
-//                localFocusManager.clearFocus()
-//            })
-//        }) {
         HomeTopContainer(
             modifier = Modifier
                 .height(toolbarHeight)
@@ -156,12 +148,11 @@ fun HomeScreen(
             onCreateList = { listName ->
                 viewModel.viewModelScope.launch {
                     val newGroceryList = GroceryList(name = listName)
-                    viewModel.addGroceryList(newGroceryList)
-                    val newGroceryListId = newGroceryList.id
+                    val newListId = viewModel.addGroceryList(newGroceryList)
 
                     navigateToScreen(
                         navController = navController,
-                        route = "${NavItems.GroceryList.route}/$newGroceryListId"
+                        route = "${NavItems.GroceryList.route}/$newListId"
                     )
                 }
                 viewModel.setShowCardVisibility(false)
@@ -175,7 +166,6 @@ fun HomeScreen(
             onDelete = {},
             onShare = {}
         )
-//    }
     }
 }
 

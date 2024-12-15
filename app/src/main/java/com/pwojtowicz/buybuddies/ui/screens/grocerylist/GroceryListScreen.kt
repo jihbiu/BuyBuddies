@@ -44,7 +44,7 @@ fun GroceryListScreen(
     )
     viewModel.setActiveGroceryListId(groceryListId)
 
-    val groceryItemsList by viewModel.groceryItemsList.collectAsState()
+    val groceryItemsList by viewModel.groceryListItemsList.collectAsState()
     val showAddGroceryItem = remember { MutableStateFlow(false) }
 
     val activeItems = groceryItemsList.filter { it.listId == groceryListId && !it.isChecked }
@@ -59,7 +59,6 @@ fun GroceryListScreen(
                 onAddItem = { name, quantity, unit ->
                     viewModel.createGroceryItem(
                         listId = groceryListId,
-                        depotId = null,
                         name = name,
                         quantity = quantity
                     )
@@ -88,7 +87,7 @@ fun GroceryListScreen(
                     }
                     items(activeItems, key = { it.id }) { groceryItem ->
                         GroceryItemRow(
-                            groceryItem = groceryItem,
+                            groceryListItem = groceryItem,
                             onCheckedChange = { viewModel.toggleGroceryItemChecked(groceryItem) },
                             onSaveChanges = { updatedItem -> viewModel.updateGroceryItem(updatedItem) },
                             onDelete = { viewModel.deleteGroceryItem(groceryItem) }
@@ -105,7 +104,7 @@ fun GroceryListScreen(
                         }
                         items(completedItems, key = { it.id }) { groceryItem ->
                             GroceryItemRow(
-                                groceryItem = groceryItem,
+                                groceryListItem = groceryItem,
                                 onCheckedChange = { viewModel.toggleGroceryItemChecked(groceryItem) },
                                 onSaveChanges = { updatedItem -> viewModel.updateGroceryItem(updatedItem) },
                                 onDelete = { viewModel.deleteGroceryItem(groceryItem) }

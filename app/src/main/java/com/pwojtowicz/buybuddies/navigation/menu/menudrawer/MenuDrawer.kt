@@ -1,47 +1,38 @@
 package com.pwojtowicz.buybuddies.navigation.menu.menudrawer
 
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.navigation.NavItems
+import com.pwojtowicz.buybuddies.navigation.NavRoute
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_main_color
+import com.pwojtowicz.buybuddies.viewmodel.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun MenuDrawer(
     navController: NavHostController,
-    drawerState: DrawerState
+    drawerState: DrawerState,
+    application: BuyBuddiesApplication,
+    authViewModel: AuthViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -57,7 +48,18 @@ fun MenuDrawer(
                 .fillMaxSize()
         ) {
             MenuDrawerProfile(
-                onClick = {
+                onLogout = {
+                    println("TEST#$@##$")
+
+                    authViewModel.signOut()
+
+                    navController.navigate(NavRoute.Auth.route) {
+                        popUpTo(NavRoute.Main.route) { inclusive = true }
+                    }
+
+                },
+                onNavToProfile = {
+                    println("TEST#$@##$ ON NAV PROFILE")
                     navigateToScreenFromDrawer(
                         navController,
                         NavItems.Profile.route,
@@ -127,7 +129,12 @@ fun MenuDrawerPreview() {
 
     MaterialTheme {
         Surface {
-            MenuDrawer(navController, drawerState)
+            MenuDrawer(
+                navController,
+                drawerState,
+                application = BuyBuddiesApplication(),
+                authViewModel = AuthViewModel(BuyBuddiesApplication())
+            )
         }
     }
 }

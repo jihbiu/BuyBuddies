@@ -1,6 +1,7 @@
 package com.pwojtowicz.buybuddies.auth
 
-sealed class SignInResult {
-    data class Success(val userData: UserData) : SignInResult()
-    data class Error(val message: String) : SignInResult()
-}
+data class SignInResult(
+    val data: UserData?,
+    val errorMessage: String?,
+    val isNewUser: Boolean = false
+)

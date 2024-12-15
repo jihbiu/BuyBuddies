@@ -22,14 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.pwojtowicz.buybuddies.data.model.groceryitem.GroceryItem
+import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
 
 @Composable
 fun GroceryItemRow(
-    groceryItem: GroceryItem,
-    onItemCheckChanged: (GroceryItem) -> Unit,
-    onClickDeleteGroceryItem: (GroceryItem) -> Unit,
-    onClickEditGroceryItem: (GroceryItem) -> Unit
+    groceryListItem: GroceryListItem,
+    onItemCheckChanged: (GroceryListItem) -> Unit,
+    onClickDeleteGroceryItem: (GroceryListItem) -> Unit,
+    onClickEditGroceryItem: (GroceryListItem) -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -37,19 +37,19 @@ fun GroceryItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onItemCheckChanged(groceryItem.copy(isChecked = !groceryItem.isChecked)) },
+            .clickable { onItemCheckChanged(groceryListItem.copy(isChecked = !groceryListItem.isChecked)) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = groceryItem.isChecked,
+            checked = groceryListItem.isChecked,
             onCheckedChange = { isChecked ->
-                onItemCheckChanged(groceryItem.copy(isChecked = isChecked))
+                onItemCheckChanged(groceryListItem.copy(isChecked = isChecked))
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = groceryItem.name, style = MaterialTheme.typography.bodySmall)
+        Text(text = groceryListItem.name, style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.weight(1f))
-        Text(text = "x${groceryItem.quantity}")
+        Text(text = "x${groceryListItem.quantity}")
         Spacer(modifier = Modifier.width(16.dp))
 
 
@@ -74,14 +74,14 @@ fun GroceryItemRow(
                 DropdownMenuItem(
                     text = { Text("Delete") },
                     onClick = {
-                        onClickDeleteGroceryItem(groceryItem)
+                        onClickDeleteGroceryItem(groceryListItem)
                         showMenu = false
                     }
                 )
             }
             if(showEditDialog) {
                 EditGroceryItemDialog(
-                    groceryItem = groceryItem,
+                    groceryListItem = groceryListItem,
                     onDismiss = { showEditDialog = false },
                     onSave = { editedItem ->
                         onClickEditGroceryItem(editedItem)
@@ -94,9 +94,9 @@ fun GroceryItemRow(
 }
 
 @Composable
-fun EditGroceryItemDialog(groceryItem: GroceryItem, onDismiss: () -> Unit, onSave: (GroceryItem) -> Unit) {
-    var name by remember { mutableStateOf(groceryItem.name) }
-    var quantity by remember { mutableStateOf(groceryItem.quantity.toString()) }
+fun EditGroceryItemDialog(groceryListItem: GroceryListItem, onDismiss: () -> Unit, onSave: (GroceryListItem) -> Unit) {
+    var name by remember { mutableStateOf(groceryListItem.name) }
+    var quantity by remember { mutableStateOf(groceryListItem.quantity.toString()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -117,7 +117,8 @@ fun EditGroceryItemDialog(groceryItem: GroceryItem, onDismiss: () -> Unit, onSav
         },
         confirmButton = {
             TextButton(onClick = {
-                onSave(groceryItem.copy(name = name, quantity = quantity.toIntOrNull() ?: 0))
+                val updatedQuantity = quantity.toDoubleOrNull() ?: 0.0
+                onSave(groceryListItem.copy(name = name, quantity = updatedQuantity))
                 onDismiss()
             }) {
                 Text("Save")
@@ -135,7 +136,11 @@ fun EditGroceryItemDialog(groceryItem: GroceryItem, onDismiss: () -> Unit, onSav
 @Composable
 fun PreviewGroceryItemRow() {
     GroceryItemRow(
-        groceryItem = GroceryItem(1, 1,1,"TestItem", 5, false),
+        groceryListItem = GroceryListItem(
+            listId = 1L,
+            name = "Milk",
+            quantity = 1.0
+        ),
         onItemCheckChanged = {},
         onClickEditGroceryItem = {},
         onClickDeleteGroceryItem = {}

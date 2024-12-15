@@ -42,7 +42,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun AddGroceryItem(
     isVisible: MutableStateFlow<Boolean>,
     onDismiss: () -> Unit,
-    onAddItem: (String, Int, String) -> Unit
+    onAddItem: (String, Double, String) -> Unit
 ) {
     val isCardVisible by isVisible.collectAsState()
     var itemName by remember { mutableStateOf("") }
@@ -173,7 +173,7 @@ fun AddGroceryItem(
                             if (itemName.isBlank()) {
                                 isError = true
                             } else {
-                                val quantity = itemQuantity.toIntOrNull() ?: 0
+                                val quantity = itemQuantity.toDoubleOrNull() ?: 0.0
                                 onAddItem(itemName, quantity, selectedUnitOption)
                                 isVisible.value = false
                             }

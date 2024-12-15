@@ -47,10 +47,12 @@ fun BuyBuddiesTheme(
 
     SideEffect {
         systemUiController.setStatusBarColor(
-            color = if (darkTheme) bb_theme_dark_system_color else bb_theme_light_system_color
+            color = if (darkTheme) bb_theme_dark_system_color else bb_theme_main_color,
+            darkIcons = !darkTheme
         )
         systemUiController.setNavigationBarColor(
-            color = bb_theme_black_clr
+            color = if (darkTheme) bb_theme_black_clr else Color.White,
+            darkIcons = !darkTheme
         )
     }
 

@@ -23,8 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryList
-import com.pwojtowicz.buybuddies.data.model.grocerylist.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
 
 @Composable
 fun GroceryListItem(
@@ -62,7 +62,7 @@ fun GroceryListItem(
                     .weight(30f)
                     .fillMaxHeight()
             ){
-                GroceryListDate(groceryList.createDate)
+                GroceryListDate(groceryList.createdAt)
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -112,8 +112,7 @@ fun PreviewGroceryItemComponent() {
     GroceryListItem(
         groceryList = GroceryList(
             name = "Apples",
-            //userId = 1,
-            createDate = "30-12-2023",
+            createdAt = "30-12-2023",
             listStatus = GroceryListStatus.DROPPED.toString()
         ),
         onItemClick = {}
