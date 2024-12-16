@@ -2,18 +2,15 @@ package com.pwojtowicz.buybuddies.data.repository
 
 import android.app.Application
 import android.util.Log
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.db.BuyBuddiesDatabase
 import com.pwojtowicz.buybuddies.data.dto.UserDTO
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.data.entity.User
 
-class UserRepository(private val application: Application) {
+class UserRepository(private val application: BuyBuddiesApplication) {
     private val buyBuddiesDB: BuyBuddiesDatabase = BuyBuddiesDatabase.getInstance(application)
     private val userDao = buyBuddiesDB.userDao();
-
-    fun createUser(userDTO: UserDTO) {
-
-    }
 
     suspend fun insertUser(user: User): Long {
         try {

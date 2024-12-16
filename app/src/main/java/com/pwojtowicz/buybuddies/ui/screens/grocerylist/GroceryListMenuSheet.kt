@@ -7,70 +7,74 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_card_clr_light
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroceryListMenuSheet(
-    isVisible: MutableStateFlow<Boolean>,
+    isVisible: Boolean,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onMarkAsDone: () -> Unit,
     onDelete: () -> Unit,
     onShare: () -> Unit
 ) {
-    var isCardVisible = isVisible.collectAsState().value
-
-    if (isCardVisible) {
+    if (isVisible) {
         ModalBottomSheet(
             containerColor = bb_theme_card_clr_light,
             scrimColor = Color(0x33000000),
-            onDismissRequest = {
-                isVisible.value = false
-                onDismiss() },
+            onDismissRequest = onDismiss
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                TextButton(
+                MenuAction(
+                    text = "Edit Name",
                     onClick = {
-                        isCardVisible = false
                         onEdit()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Edit Name")
-                }
-                TextButton(
+                        onDismiss()
+                    }
+                )
+
+                MenuAction(
+                    text = "Mark as Done",
                     onClick = {
-                        isCardVisible = false
                         onMarkAsDone()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Mark as Done")
-                }
-                TextButton(
+                        onDismiss()
+                    }
+                )
+
+                MenuAction(
+                    text = "Delete",
                     onClick = {
-                        isCardVisible = false
                         onDelete()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Delete")
-                }
-                TextButton(
+                        onDismiss()
+                    }
+                )
+
+                MenuAction(
+                    text = "Share",
                     onClick = {
-                        isCardVisible = false
                         onShare()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Share")
-                }
+                        onDismiss()
+                    }
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun MenuAction(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Text(text)
     }
 }

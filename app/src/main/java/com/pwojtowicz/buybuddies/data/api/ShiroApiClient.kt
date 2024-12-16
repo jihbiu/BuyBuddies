@@ -6,7 +6,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ShiroApiClient {
-    const val BASE_URL = "http://192.168.0.108:8080/"
+    const val BASE_URL = ""
+//    const val BASE_URL =
+
 
     private fun createAuthenticatedClient(token: String) = OkHttpClient.Builder()
         .addInterceptor { chain ->
@@ -28,4 +30,6 @@ object ShiroApiClient {
     fun getAuthService(token: String): AuthApiService =
         createAuthenticatedRetrofit(token).create(AuthApiService::class.java)
 
+    fun getGroceryListService(token: String): GroceryListApiService =
+        createAuthenticatedRetrofit(token).create(GroceryListApiService::class.java)
 }

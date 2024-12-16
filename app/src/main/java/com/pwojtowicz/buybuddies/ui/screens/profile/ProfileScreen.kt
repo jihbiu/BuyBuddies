@@ -15,10 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.ui.components.ContainerCard
 @Composable
 fun ProfileScreen(
-    application: Application,
+    application: BuyBuddiesApplication,
     navController: NavHostController,
     paddingValues: PaddingValues
 ) {

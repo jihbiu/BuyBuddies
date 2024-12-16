@@ -3,6 +3,7 @@ package com.pwojtowicz.buybuddies.data.repository
 import android.app.Application
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.api.HomeApiService
 import com.pwojtowicz.buybuddies.data.api.ShiroApiClient
 import com.pwojtowicz.buybuddies.data.dao.HomeDao
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 class HomeRepository(
-    private val application: Application
+    private val application: BuyBuddiesApplication
 //    private val homeApi: HomeApiService = ShiroRetrofitClient.homeService,
 //    private val homeDao: HomeDao,
 //    private val auth: FirebaseAuth = FirebaseAuth.getInstance()

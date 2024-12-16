@@ -2,6 +2,7 @@ package com.pwojtowicz.buybuddies.data.repository
 
 import android.app.Application
 import android.util.Log
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.db.BuyBuddiesDatabase
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
@@ -9,7 +10,7 @@ import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
 import kotlinx.coroutines.flow.Flow
 
 
-class GroceryRepository(private val application: Application) {
+class GroceryRepository(private val application: BuyBuddiesApplication) {
     private val buyBuddiesDB: BuyBuddiesDatabase = BuyBuddiesDatabase.getInstance(application)
     private val groceryListDao = buyBuddiesDB.groceryListDao()
     private val groceryItemDao = buyBuddiesDB.groceryListItemDao()
@@ -49,4 +50,5 @@ class GroceryRepository(private val application: Application) {
     fun getLabelsForList(listId: Long): Flow<List<GroceryListLabel>> {
         return groceryListLabelDao.getLabelsForList(listId)
     }
+
 }

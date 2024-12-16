@@ -24,22 +24,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGroceryList(
-    isVisible: MutableStateFlow<Boolean>,
+    isVisible: Boolean,
     onDismiss: () -> Unit,
     onCreateList: (String) -> Unit
 ) {
-    var isCardVisible = isVisible.collectAsState().value
     var listName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("") }
-
     var isError by remember { mutableStateOf(false) }
 
-    if (isCardVisible) {
+    // Reset state when sheet closes
+    LaunchedEffect(isVisible) {
+        if (!isVisible) {
+            listName = ""
+            selectedType = ""
+            isError = false
+        }
+    }
+
+
+    if (isVisible) {
         ModalBottomSheet(
             containerColor = bb_theme_card_clr_light,
             scrimColor = Color(0x33000000),
             onDismissRequest = {
-                isCardVisible = false
                 onDismiss()
             }
         ) {
@@ -63,22 +70,21 @@ fun AddGroceryList(
                         fontWeight = FontWeight.Bold
                     )
                 )
+
                 BBOutlinedTextField(
                     value = listName,
-                    onValueChange = {
-                        listName = it
-                        isError = it.isEmpty()
-                                    },
-
+                    onValueChange = { newValue ->
+                        listName = newValue
+                        isError = newValue.isEmpty()
+                    },
                     isError = isError,
                     label = { Text(if (isError) "List Name - Required" else "List Name") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp)
                 )
-                Spacer(
-                    Modifier.weight(1.0f)
-                )
+
+                Spacer(Modifier.weight(1.0f))
 
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -88,20 +94,18 @@ fun AddGroceryList(
                         onClick = {
                             if (listName.isBlank()) {
                                 isError = true
-                            }
-                            else {
+                            } else {
                                 onCreateList(listName)
-                                isCardVisible = false
+                                onDismiss()
                             }
                         },
                         modifier = Modifier.padding(8.dp)
                     ) {
                         Text("Create List")
                     }
+
                     OutlinedButton(
                         onClick = {
-                            isError = false
-                            isCardVisible = false
                             onDismiss()
                         },
                         modifier = Modifier.padding(8.dp)
@@ -118,11 +122,10 @@ fun AddGroceryList(
 @Preview(showBackground = true)
 @Composable
 fun GroceryListCreationCardPreview() {
-    val isVisible = MutableStateFlow(true)
     val onCreateList: (String) -> Unit = { }
     BuyBuddiesTheme {
         AddGroceryList(
-            isVisible = isVisible,
+            isVisible = true,
             onDismiss = {},
             onCreateList = onCreateList,
         )

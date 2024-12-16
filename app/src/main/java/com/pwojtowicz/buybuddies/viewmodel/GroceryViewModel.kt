@@ -3,6 +3,7 @@ package com.pwojtowicz.buybuddies.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
 import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class GroceryViewModel(application: Application): ViewModel() {
+class GroceryViewModel(application: BuyBuddiesApplication): ViewModel() {
    private val repository = GroceryRepository(application)
 
    private val _activeGroceryListId = MutableStateFlow<Long?>(null)

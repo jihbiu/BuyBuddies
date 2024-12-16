@@ -25,10 +25,10 @@ import com.pwojtowicz.buybuddies.ui.components.ContainerCard
 fun MainListContainer(
     modifier: Modifier,
     scrollProgress: Float,
-    groceryLists: List<GroceryList> = emptyList(),
-    groceryListLabels: List<GroceryListLabel> = emptyList(),
+    groceryLists: List<GroceryList>,
+    groceryListLabels: List<GroceryListLabel>,
     onClickGroceryList: (String) -> Unit,
-    onLongPressGroceryList: (String) -> Unit,
+    onLongPressGroceryList: (Long) -> Unit,
     onSearchInput: (String) -> Unit,
     onStatusFilterChange: (GroceryListStatus?) -> Unit,
     onLabelFilterChange: (GroceryListLabel?) -> Unit
@@ -47,27 +47,26 @@ fun MainListContainer(
                 onLabelFilterChange = onLabelFilterChange,
                 groceryListLabels = groceryListLabels
             )
+
             LazyVerticalGrid(
-                modifier = Modifier
-                    .padding(16.dp, 0.dp),
+                modifier = Modifier.padding(16.dp, 0.dp),
                 columns = GridCells.Fixed(3)
             ) {
                 item(span = { GridItemSpan(3) }) {
-                    Spacer(
-                        modifier = Modifier
-                            .height(20.dp)
-                    )
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
+
                 items(groceryLists) { groceryList ->
                     GroceryListCard(
                         groceryList = groceryList,
-                        modifier = Modifier
-                            .pointerInput(groceryList.id) {
-                                detectTapGestures(
-                                    onTap = { onClickGroceryList(groceryList.id.toString()) },
-                                    onLongPress = { onLongPressGroceryList(groceryList.id.toString()) }
-                                )
-                            }
+                        modifier = Modifier.pointerInput(groceryList.id) {
+                            detectTapGestures(
+                                onTap = { onClickGroceryList(groceryList.id.toString()) },
+                                onLongPress = {
+                                    onLongPressGroceryList(groceryList.id)
+                                }
+                            )
+                        }
                     )
                 }
             }

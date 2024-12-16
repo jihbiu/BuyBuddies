@@ -1,6 +1,5 @@
 package com.pwojtowicz.buybuddies.ui.screens.home
 
-import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,7 +30,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.pwojtowicz.buybuddies.data.entity.GroceryList
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.GroceryListMenuSheet
@@ -43,12 +42,12 @@ import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
-    application: Application,
+    application: BuyBuddiesApplication,
     navController: NavHostController,
     paddingValues: PaddingValues
 ) {
     val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(application))
-    val newListId by viewModel.newListId.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val filteredGroceryLists by viewModel.filteredGroceryLists.collectAsState()
     val groceryListLabels by viewModel.groceryListLabels.collectAsState()
 
@@ -56,7 +55,7 @@ fun HomeScreen(
 
     val toolbarHeight = 100.dp
     val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
-    var toolbarOffsetHeightPx by remember { mutableStateOf(0f) }
+    var toolbarOffsetHeightPx by remember { mutableFloatStateOf(0f) }
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -68,13 +67,20 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(newListId) {
-        newListId?.let {
+    LaunchedEffect(uiState.newListId) {
+        uiState.newListId?.let {
             navigateToScreen(
                 navController = navController,
                 route = "${NavItems.GroceryList.route}/$it"
             )
             viewModel.resetNewListId()
+        }
+    }
+
+    uiState.error?.let { error ->
+        LaunchedEffect(error) {
+            // TODO ERROR SNACKBAR
+            viewModel.clearError()
         }
     }
 
@@ -108,7 +114,7 @@ fun HomeScreen(
             scrollProgress = (toolbarOffsetHeightPx / -toolbarHeightPx).coerceIn(0f, 1f),
             groceryLists = filteredGroceryLists,
             groceryListLabels = groceryListLabels,
-            onClickGroceryList = { groceryListId: String ->
+            onClickGroceryList = { groceryListId ->
                 viewModel.setShowCardVisibility(false)
                 viewModel.viewModelScope.launch {
                     navigateToScreen(
@@ -117,25 +123,17 @@ fun HomeScreen(
                     )
                 }
             },
-            onLongPressGroceryList = { groceryListId: String ->
+            onLongPressGroceryList = { groceryListId ->
                 viewModel.setShowMenuSheetVisibility(true)
+                viewModel.setLongPressedGroceryList(groceryListId)
             },
-            onSearchInput = { query ->
-                viewModel.setSearchText(query)
-            },
-            onStatusFilterChange = { status ->
-                viewModel.setSelectedStatus(status)
-            },
-            onLabelFilterChange = { label ->
-                viewModel.setSelectedLabel(label)
-            }
+            onSearchInput = viewModel::setSearchText,
+            onStatusFilterChange = viewModel::setSelectedStatus,
+            onLabelFilterChange = viewModel::setSelectedLabel
         )
 
-
         GroceryListAddFAB(
-            onClick = {
-                viewModel.setShowCardVisibility(true)
-            },
+            onClick = { viewModel.setShowCardVisibility(true) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 16.dp)
@@ -143,38 +141,35 @@ fun HomeScreen(
         )
 
         AddGroceryList(
-            isVisible = viewModel.showCard,
+            isVisible = uiState.showCard,
             onDismiss = { viewModel.setShowCardVisibility(false) },
             onCreateList = { listName ->
                 viewModel.viewModelScope.launch {
-                    val newGroceryList = GroceryList(name = listName)
-                    val newListId = viewModel.addGroceryList(newGroceryList)
-
-                    navigateToScreen(
-                        navController = navController,
-                        route = "${NavItems.GroceryList.route}/$newListId"
-                    )
+                    viewModel.createGroceryList(listName)
                 }
                 viewModel.setShowCardVisibility(false)
             }
         )
+
         GroceryListMenuSheet(
-            isVisible = viewModel.showMenuSheet,
+            isVisible = uiState.showMenuSheet,
             onDismiss = { viewModel.setShowMenuSheetVisibility(false) },
             onEdit = {},
             onMarkAsDone = {},
-            onDelete = {},
+            onDelete = {
+                viewModel.deleteGroceryListById(uiState.longPressedListId)
+            },
             onShare = {}
         )
     }
 }
 
 
-@Preview()
+@Preview
 @Composable
 fun PreviewHomeScreen() {
     val paddingValues = PaddingValues(30.dp)
-    val application: Application? = null
+    val application: BuyBuddiesApplication? = null
     val navController = rememberNavController()
 
     HomeScreen(

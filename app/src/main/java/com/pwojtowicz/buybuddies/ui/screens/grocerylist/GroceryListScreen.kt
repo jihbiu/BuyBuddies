@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.ui.components.ContainerCard
 import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun GroceryListScreen(
-    application: Application,
+    application: BuyBuddiesApplication,
     groceryListId: Long,
     navController: NavHostController,
     paddingValues: PaddingValues
@@ -129,7 +130,7 @@ fun GroceryListScreen(
 @Composable
 fun PreviewGroceryListScreen() {
     val paddingValues = PaddingValues(30.dp)
-    val application: Application? = null
+    val application: BuyBuddiesApplication? = null
     val navController = rememberNavController()
 
     GroceryListScreen(

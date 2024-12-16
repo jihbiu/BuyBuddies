@@ -15,29 +15,26 @@ interface GroceryListDao {
     @Query("SELECT * FROM grocery_lists")
     fun getAll(): Flow<List<GroceryList>>
 
-//    @Query("SELECT * FROM grocery_lists WHERE id IN (:listIds)")
-//    fun getGroceryListsByIds(listIds: List<Long>): Flow<List<GroceryList>>
-
-    //@Query("SELECT * FROM grocery_lists WHERE labelId = :labelId")
-    //fun getGroceryListsByLabelId(labelId: Long?): Flow<List<GroceryList>>
-
     @Query("SELECT * FROM grocery_lists WHERE homeId = :homeId")
     fun getByHomeId(homeId: Long): Flow<List<GroceryList>>
 
-    @Query("SELECT * FROM grocery_lists WHERE ownerId = :ownerId")
-    fun getByOwnerId(ownerId: String): Flow<List<GroceryList>>
+    @Query("SELECT * FROM grocery_lists WHERE ownerId = :firebaseUid")
+    fun getByOwnerId(firebaseUid: String): Flow<List<GroceryList>>
 
     @Query("SELECT * FROM grocery_lists ORDER BY sortOrder ASC")
     fun getAllGroceryListsSorted(): Flow<List<GroceryList>>
 
     @Query("SELECT * FROM grocery_lists WHERE id = :id")
-    fun getById(id: Long): Flow<GroceryList>
+    suspend fun getById(id: Long): GroceryList?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(groceryList: GroceryList): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(groceryList: List<GroceryList>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(groceryLists: List<GroceryList>)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM grocery_lists WHERE name = :name AND ownerId = :ownerId)")
+    suspend fun exists(name: String, ownerId: String?): Boolean
 
     @Update
     suspend fun update(groceryList: GroceryList)
@@ -48,6 +45,15 @@ interface GroceryListDao {
     @Delete
     suspend fun delete(groceryList: GroceryList)
 
+    @Query("DELETE FROM grocery_lists WHERE ownerId = :firebaseUid")
+    suspend fun deleteAllByOwnerId(firebaseUid: String)
+
     @Query("DELETE FROM grocery_lists")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM grocery_lists WHERE ownerId = :firebaseUid ORDER BY updatedAt DESC")
+    suspend fun getLatestByOwnerId(firebaseUid: String): List<GroceryList>
+
+    @Query("DELETE FROM grocery_lists WHERE id = :groceryListId")
+    suspend fun deleteById(groceryListId: Long)
 }

@@ -3,10 +3,13 @@ package com.pwojtowicz.buybuddies.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuthException
 import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.auth.SignInResult
 import com.pwojtowicz.buybuddies.auth.SignInState
 import com.pwojtowicz.buybuddies.auth.UserData
+import com.pwojtowicz.buybuddies.data.api.AuthApiService
 import com.pwojtowicz.buybuddies.data.api.ShiroApiClient
 import com.pwojtowicz.buybuddies.data.dto.UserDTO
 import kotlinx.coroutines.TimeoutCancellationException
@@ -21,8 +24,8 @@ class AuthViewModel(
 ) : ViewModel() {
 
     private val authClient = application.authorizationClient
-//    private val authService = ShiroApiClient.getAuthService()
     private val userRepository = application.userRepository
+    private val groceryListRepository = application.groceryListRepository
 
     private val _state = MutableStateFlow(SignInState())
     val state = _state.asStateFlow()
@@ -74,36 +77,34 @@ class AuthViewModel(
             throw Exception("Sign in failed: No user data")
         }
 
+        try {
+            val user = authenticateUser(result)
+            loadUserData(user.firebaseUid)
+            updateSuccessState(result.data)
+        } catch (e: Exception) {
+            Log.e(TAG, "Sign in error", e)
+            throw e
+        }
+    }
+
+    private suspend fun authenticateUser(result: SignInResult): UserDTO {
         val idToken = authClient.getIdToken() ?: throw Exception("Failed to get ID token")
         Log.d(TAG, "ID Token: $idToken")
 
         val authService = ShiroApiClient.getAuthService(idToken)
+        val userData = result.data!!
 
-        try {
-            if (result.isNewUser) {
-                val userDTO = createUserDTO(result.data)
-                Log.d(TAG, "URL: ${ShiroApiClient.BASE_URL}api/users")
-                Log.d(TAG, "Creating new user with data: $userDTO")
-                val createdUser = authService.createUser(userDTO)
-                Log.d(TAG, "Successfully created user in backend: $createdUser")
-            } else {
-                try {
-                    Log.d(TAG, "Getting existing user with firebaseUid: ${result.data.firebaseUid}")
-                    val userData = authService.getUserByFirebaseId(result.data.firebaseUid)
-                    Log.d(TAG, "Successfully retrieved user data: $userData")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error getting user data", e)
-                    val userDTO = createUserDTO(result.data)
-                    Log.d(TAG, "User not found, creating new user with data: $userDTO")
-                    val createdUser = authService.createUser(userDTO)
-                    Log.d(TAG, "Successfully created user in backend: $createdUser")
-                }
-            }
-            updateSuccessState(result.data)
-        } catch (e: Exception) {
-            Log.e(TAG, "Backend communication error", e)
-            throw e
+        return if (result.isNewUser) {
+            createNewUser(userData, authService)
+        } else {
+            getOrCreateExistingUser(userData, authService)
         }
+    }
+
+    private suspend fun createNewUser(userData: UserData, authService: AuthApiService): UserDTO {
+        val userDTO = createUserDTO(userData)
+        Log.d(TAG, "Creating new user with data: $userDTO")
+        return authService.createUser(userDTO)
     }
 
     private fun createUserDTO(userData: UserData) = UserDTO(
@@ -112,6 +113,25 @@ class AuthViewModel(
         name = userData.username ?: "",
         email = userData.email ?: ""
     )
+
+    private suspend fun getOrCreateExistingUser(userData: UserData, authService: AuthApiService): UserDTO {
+        return try {
+            Log.d(TAG, "Getting existing user with firebaseUid: ${userData.firebaseUid}")
+            authService.getUserByFirebaseId(userData.firebaseUid)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting user data", e)
+            createNewUser(userData, authService)
+        }
+    }
+
+    private suspend fun loadUserData(firebaseUid: String) {
+        try {
+            groceryListRepository.fetchUserLists(firebaseUid)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading user data", e)
+        }
+    }
+
 
     fun signOut() {
         viewModelScope.launch {

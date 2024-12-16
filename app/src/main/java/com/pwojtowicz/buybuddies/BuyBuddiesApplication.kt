@@ -3,6 +3,7 @@ package com.pwojtowicz.buybuddies
 import android.app.Application
 import com.google.android.gms.auth.api.identity.Identity
 import com.pwojtowicz.buybuddies.auth.AuthorizationClient
+import com.pwojtowicz.buybuddies.data.repository.GroceryListRepository
 import com.pwojtowicz.buybuddies.data.repository.HomeRepository
 import com.pwojtowicz.buybuddies.data.repository.UserRepository
 import com.pwojtowicz.buybuddies.navigation.NavRoute
@@ -14,6 +15,7 @@ class BuyBuddiesApplication : Application() {
 
     lateinit var userRepository: UserRepository
     lateinit var homeRepository: HomeRepository
+    lateinit var groceryListRepository: GroceryListRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -29,6 +31,7 @@ class BuyBuddiesApplication : Application() {
 
         userRepository = UserRepository(application = this)
         homeRepository = HomeRepository(application= this)
+        groceryListRepository = GroceryListRepository(application = this)
     }
 
     companion object {
