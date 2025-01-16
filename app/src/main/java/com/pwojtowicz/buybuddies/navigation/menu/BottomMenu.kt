@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun BottomMenu(navController: NavHostController, coroutineScope: CoroutineScope, drawerState: DrawerState){
     val screens = listOf(
-        NavItems.Home,
+        NavItems.Main,
         NavItems.Scanner,
         NavItems.Notification
     )
@@ -93,8 +93,8 @@ fun BottomMenuPreview() {
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    NavHost(navController, startDestination = NavItems.Home.route) {
-        composable(NavItems.Home.route) {}
+    NavHost(navController, startDestination = NavItems.Main.route) {
+        composable(NavItems.Main.route) {}
         composable(NavItems.GroceryList.route) {}
         composable(NavItems.Settings.route) {}
     }

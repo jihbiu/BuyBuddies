@@ -83,10 +83,10 @@ private fun NavGraphBuilder.mainNavigation(
     authViewModel: AuthViewModel
 ) {
     navigation(
-        startDestination = NavItems.Home.route,
+        startDestination = NavItems.Main.route,
         route = NavRoute.Main.route
     ) {
-        composable(NavItems.Home.route) {
+        composable(NavItems.Main.route) {
             MainContent(
                 navController = navController,
                 application = application,
@@ -212,7 +212,8 @@ fun AuthContent(
                     )
                 }
             }
-        }
+        },
+        onCleanError = { authViewModel.clearError() }
     )
 }
 

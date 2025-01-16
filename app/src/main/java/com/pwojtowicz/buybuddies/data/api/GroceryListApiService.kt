@@ -9,15 +9,34 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface GroceryListApiService {
-    @GET("api/grocery-lists/user/{firebaseUid}")
-    suspend fun getGroceryListsByUser(@Path("firebaseUid") firebaseUid: String): List<GroceryListDTO>
+    // Get all lists (owned + member)
+    @GET("api/grocery-lists")
+    suspend fun getMyLists(): List<GroceryListDTO>
+
+    @GET("api/grocery-lists/{id}")
+    suspend fun getGroceryList(@Path("id") id: Long): GroceryListDTO
 
     @POST("api/grocery-lists")
     suspend fun createGroceryList(@Body groceryListDTO: GroceryListDTO): GroceryListDTO
 
     @PUT("api/grocery-lists/{id}")
-    suspend fun updateGroceryList(@Path("id") id: Long, @Body groceryListDTO: GroceryListDTO): GroceryListDTO
+    suspend fun updateGroceryList(
+        @Path("id") id: Long,
+        @Body groceryListDTO: GroceryListDTO
+    ): GroceryListDTO
 
-    @DELETE("api/grocery-lists")
-    suspend fun deleteGroceryList(@Body groceryList: GroceryListDTO)
+    @DELETE("api/grocery-lists/{id}")
+    suspend fun deleteGroceryList(@Path("id") id: Long)
+
+    @POST("api/grocery-lists/{listId}/members/{memberFirebaseUid}")
+    suspend fun addMember(
+        @Path("listId") listId: Long,
+        @Path("memberFirebaseUid") memberFirebaseUid: String
+    ): GroceryListDTO
+
+    @DELETE("api/grocery-lists/{listId}/members/{memberFirebaseUid}")
+    suspend fun removeMember(
+        @Path("listId") listId: Long,
+        @Path("memberFirebaseUid") memberFirebaseUid: String
+    ): GroceryListDTO
 }

@@ -7,7 +7,6 @@ import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
 import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
-import com.pwojtowicz.buybuddies.data.repository.GroceryListRepository
 import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
 import com.pwojtowicz.buybuddies.data.repository.HomeRepository
 import com.pwojtowicz.buybuddies.data.repository.UserRepository
@@ -25,7 +24,7 @@ class HomeViewModel(
 ) : ViewModel() {
     // Repositories
     private val groceryRepository = GroceryRepository(application)
-    private val groceryListRepository = GroceryListRepository(application)
+    private val groceryListRepository = application.groceryListRepository
     private val userRepository = UserRepository(application)
     private val homeRepository = HomeRepository(application)
 
@@ -34,11 +33,19 @@ class HomeViewModel(
     val uiState = _uiState.asStateFlow()
 
     // Grocery Lists Data
-    val groceryLists = groceryListRepository.getGroceryLists().stateIn(
+    private val currentUser = application.authorizationClient.getSignedInUser()
+    val groceryLists = groceryListRepository.getListsForCurrentUser(
+        currentUser?.firebaseUid ?: ""
+    ).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
     )
+//    val groceryLists = groceryListRepository.getLocalGroceryLists().stateIn(
+//        viewModelScope,
+//        SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
+//        emptyList()
+//    )
 
     val groceryListLabels = groceryRepository.getAllGroceryListLabels().stateIn(
         viewModelScope,
@@ -106,7 +113,7 @@ class HomeViewModel(
                     createdAt = System.currentTimeMillis().toString()
                 )
 
-                val newId = groceryListRepository.insertGroceryList(newGroceryList)
+                val newId = groceryListRepository.createGroceryList(newGroceryList)
                 updateUiState { it.copy(
                     newListId = newId,
                     error = null
@@ -114,25 +121,11 @@ class HomeViewModel(
             } catch (e: Exception) {
                 Log.e(TAG, "Error creating list", e)
                 val errorMessage = when (e) {
-                    is IllegalStateException -> "Please sign in to create a list"
-                    else -> e.message ?: "Failed to create list"
+                    is IllegalStateException -> e.message ?: "Authentication error"
+                    is IllegalArgumentException -> e.message ?: "Invalid input"
+                    else -> "Failed to create list"
                 }
                 updateUiState { it.copy(error = errorMessage) }
-            }
-        }
-    }
-
-    suspend fun addGroceryList(groceryList: GroceryList): Long {
-        return groceryRepository.insertGroceryList(groceryList)
-    }
-
-    fun deleteGroceryList(groceryList: GroceryList) {
-        viewModelScope.launch {
-            try {
-                groceryRepository.deleteGroceryList(groceryList)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error deleting list", e)
-                updateUiState { it.copy(error = e.message) }
             }
         }
     }
@@ -144,12 +137,12 @@ class HomeViewModel(
                 setShowMenuSheetVisibility(false)
             } catch (e: Exception) {
                 Log.e(TAG, "Error deleting list", e)
-                updateUiState { it.copy(
-                    error = when (e) {
-                        is IllegalStateException -> e.message ?: "Error accessing list"
-                        else -> "Failed to delete list"
-                    }
-                )}
+                val errorMessage = when (e) {
+                    is IllegalStateException -> e.message ?: "Authentication error"
+                    is IllegalArgumentException -> e.message ?: "Invalid operation"
+                    else -> "Failed to delete list"
+                }
+                updateUiState { it.copy(error = errorMessage) }
             }
         }
     }
@@ -191,36 +184,3 @@ data class HomeUiState(
     val selectedLabel: GroceryListLabel? = null,
     val error: String? = null
 )
-
-//    init {
-//        viewModelScope.launch {
-//            try {
-//                userRepository.deleteAll()
-//                groceryRepository.deleteAllGroceryItems()
-//                homeRepository.deleteAll()
-//
-//                val testUser = User(
-//                    firebaseUid = "test_user_123",
-//                    username = "Test User"
-//                )
-//                val userId = userRepository.insertUser(testUser)
-//
-//                // Create and insert test homes
-//                val testHome = Home(
-//                    id = 1L,
-//                    name = "Test Home",
-//                    description = "Test home description",
-//                    ownerId = testUser.firebaseUid
-//                )
-//                homeRepository.insertHome(testHome)
-//
-//                val testGroceryLists = generateTestGroceryLists(testUser.firebaseUid)
-//                testGroceryLists.forEach { groceryList ->
-//                    groceryRepository.insertGroceryList(groceryList)
-//                }
-//
-//            } catch (e: Exception) {
-//                Log.e("ViewModel", "Error during initialization", e)
-//            }
-//        }
-//    }

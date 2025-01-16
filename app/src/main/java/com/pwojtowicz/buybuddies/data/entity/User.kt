@@ -24,6 +24,7 @@ data class User(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val firebaseUid: String = "",
-    val avatarId: Long? = null,
     val username: String = "",
+    val email: String,
+    val avatarId: Long? = null,
 )

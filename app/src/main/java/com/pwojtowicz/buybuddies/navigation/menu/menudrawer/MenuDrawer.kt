@@ -49,8 +49,6 @@ fun MenuDrawer(
         ) {
             MenuDrawerProfile(
                 onLogout = {
-                    println("TEST#$@##$")
-
                     authViewModel.signOut()
 
                     navController.navigate(NavRoute.Auth.route) {
@@ -59,7 +57,6 @@ fun MenuDrawer(
 
                 },
                 onNavToProfile = {
-                    println("TEST#$@##$ ON NAV PROFILE")
                     navigateToScreenFromDrawer(
                         navController,
                         NavItems.Profile.route,

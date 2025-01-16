@@ -38,7 +38,7 @@ class AuthorizationClient(
                     .setServerClientId(context.getString(R.string.web_client_id))
                     .build()
             )
-            .setAutoSelectEnabled(true)
+            .setAutoSelectEnabled(false)
             .build()
     }
 
@@ -115,6 +115,21 @@ class AuthorizationClient(
             .edit()
             .clear()
             .apply()
+        getSharedPreferences("com.google.android.gms.signin", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
+        getSharedPreferences("DefaultPreferencesName", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
+
+        try {
+            context.deleteDatabase("webview.db")
+            context.deleteDatabase("webviewCache.db")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing WebView data", e)
+        }
     }
 
     fun getSignedInUser(): UserData? = auth.currentUser?.let { user ->

@@ -1,7 +1,9 @@
 package com.pwojtowicz.buybuddies.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -11,15 +13,21 @@ import androidx.room.PrimaryKey
             entity = Home::class,
             parentColumns = ["id"],
             childColumns = ["homeId"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.SET_NULL,
+            deferred = true
         ),
         ForeignKey(
             entity = User::class,
             parentColumns = ["firebaseUid"],
             childColumns = ["ownerId"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.CASCADE,
+            deferred = true
         )
     ],
+    indices = [
+        Index("homeId"),
+        Index("ownerId")
+    ]
 )
 data class GroceryList(
     @PrimaryKey(autoGenerate = true)

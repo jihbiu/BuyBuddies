@@ -29,13 +29,22 @@ import com.pwojtowicz.buybuddies.ui.theme.bb_theme_main_color
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_reject_red
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_text_clr_dark
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_text_clr_gray
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
     state: SignInState,
-    onSignInClick: () -> Unit
+    onSignInClick: () -> Unit,
+    onCleanError: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.signInError) {
+        if (state.signInError != null) {
+            delay(5000)
+            onCleanError()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -45,8 +54,8 @@ fun LoginScreen(
         AnimatedVisibility(
             visible = state.signInError != null,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp),
+                .align(Alignment.TopCenter)
+                .padding(top = 64.dp),
             enter = fadeIn() + slideInVertically { it },
             exit = fadeOut() + slideOutVertically { it }
         ) {
@@ -54,12 +63,12 @@ fun LoginScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = bb_theme_reject_red.copy(alpha = 0.9f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
+                        .wrapContentSize()
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(

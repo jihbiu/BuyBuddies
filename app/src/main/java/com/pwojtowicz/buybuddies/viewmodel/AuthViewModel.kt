@@ -12,18 +12,22 @@ import com.pwojtowicz.buybuddies.auth.UserData
 import com.pwojtowicz.buybuddies.data.api.AuthApiService
 import com.pwojtowicz.buybuddies.data.api.ShiroApiClient
 import com.pwojtowicz.buybuddies.data.dto.UserDTO
+import com.pwojtowicz.buybuddies.data.entity.User
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import retrofit2.HttpException
+import java.io.IOException
 
 class AuthViewModel(
     private val application: BuyBuddiesApplication,
 ) : ViewModel() {
-
     private val authClient = application.authorizationClient
+    private val preferencesManager = application.preferencesManager
+
     private val userRepository = application.userRepository
     private val groceryListRepository = application.groceryListRepository
 
@@ -36,8 +40,13 @@ class AuthViewModel(
 
     private fun checkIfSignedIn() {
         val currentUser = authClient.getSignedInUser()
-        _state.update { it.copy(isSignedIn = currentUser != null) }
-        Log.d(TAG, "Current user: $currentUser")
+        val isFirstInstall = preferencesManager.isFirstInstall
+
+        _state.update { it.copy(
+            isSignedIn = currentUser != null && !isFirstInstall
+        )}
+
+        Log.d(TAG, "Current user: $currentUser, First install: $isFirstInstall")
     }
 
 
@@ -78,8 +87,17 @@ class AuthViewModel(
         }
 
         try {
-            val user = authenticateUser(result)
-            loadUserData(user.firebaseUid)
+            val remoteUser = authenticateUser(result)
+            userRepository.saveUser(
+                User(
+                    firebaseUid = remoteUser.firebaseUid,
+                    username = remoteUser.name,
+                    email = remoteUser.email
+                )
+            )
+            Log.d(TAG, "Successfully saved user to local database: ${remoteUser.firebaseUid}")
+
+            loadUserData()
             updateSuccessState(result.data)
         } catch (e: Exception) {
             Log.e(TAG, "Sign in error", e)
@@ -91,21 +109,14 @@ class AuthViewModel(
         val idToken = authClient.getIdToken() ?: throw Exception("Failed to get ID token")
         Log.d(TAG, "ID Token: $idToken")
 
+
         val authService = ShiroApiClient.getAuthService(idToken)
         val userData = result.data!!
-
-        return if (result.isNewUser) {
-            createNewUser(userData, authService)
-        } else {
-            getOrCreateExistingUser(userData, authService)
-        }
-    }
-
-    private suspend fun createNewUser(userData: UserData, authService: AuthApiService): UserDTO {
         val userDTO = createUserDTO(userData)
-        Log.d(TAG, "Creating new user with data: $userDTO")
-        return authService.createUser(userDTO)
+
+        return authService.createOrUpdateUser(userDTO)
     }
+
 
     private fun createUserDTO(userData: UserData) = UserDTO(
         id = null,
@@ -114,19 +125,31 @@ class AuthViewModel(
         email = userData.email ?: ""
     )
 
-    private suspend fun getOrCreateExistingUser(userData: UserData, authService: AuthApiService): UserDTO {
+    private suspend fun updateUser(userDTO: UserDTO, authService: AuthApiService): UserDTO {
+        Log.d(TAG, "Starting user update for UID: ${userDTO.firebaseUid}")
         return try {
-            Log.d(TAG, "Getting existing user with firebaseUid: ${userData.firebaseUid}")
-            authService.getUserByFirebaseId(userData.firebaseUid)
+            Log.d(TAG, "User data being sent: $userDTO")
+            val updatedUser = authService.updateUserData(userDTO)
+            Log.d(TAG, "Update successful, received: $updatedUser")
+            updatedUser
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting user data", e)
-            createNewUser(userData, authService)
+            Log.e(TAG, "Error updating user data: ${e.message}", e)
+            when (e) {
+                is HttpException -> {
+                    Log.e(TAG, "HTTP Error code: ${e.code()}")
+                    Log.e(TAG, "HTTP Error message: ${e.message()}")
+                }
+                is IOException -> {
+                    Log.e(TAG, "Network Error: ${e.message}")
+                }
+            }
+            userDTO
         }
     }
 
-    private suspend fun loadUserData(firebaseUid: String) {
+    private suspend fun loadUserData() {
         try {
-            groceryListRepository.fetchUserLists(firebaseUid)
+            groceryListRepository.fetchUserLists()
         } catch (e: Exception) {
             Log.e(TAG, "Error loading user data", e)
         }
@@ -148,6 +171,7 @@ class AuthViewModel(
     }
 
     private fun updateSuccessState(userData: UserData) {
+        preferencesManager.isFirstInstall = false
         _state.update {
             it.copy(
                 isSignInSuccessful = true,
@@ -194,6 +218,10 @@ class AuthViewModel(
                 signInError = null
             )
         }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(signInError = null) }
     }
 
     companion object {

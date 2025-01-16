@@ -15,6 +15,9 @@ interface GroceryListDao {
     @Query("SELECT * FROM grocery_lists")
     fun getAll(): Flow<List<GroceryList>>
 
+    @Query("SELECT * FROM grocery_lists WHERE ownerId = :userId")
+    fun getListsForUser(userId: String): Flow<List<GroceryList>>
+
     @Query("SELECT * FROM grocery_lists WHERE homeId = :homeId")
     fun getByHomeId(homeId: Long): Flow<List<GroceryList>>
 
@@ -35,6 +38,12 @@ interface GroceryListDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM grocery_lists WHERE name = :name AND ownerId = :ownerId)")
     suspend fun exists(name: String, ownerId: String?): Boolean
+
+    @Query("SELECT COUNT(*) FROM homes WHERE id = :homeId")
+    suspend fun homeExists(homeId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM users WHERE firebaseUid = :uid")
+    suspend fun userExists(uid: String): Int
 
     @Update
     suspend fun update(groceryList: GroceryList)

@@ -29,4 +29,8 @@ class UserRepository(private val application: BuyBuddiesApplication) {
             throw e
         }
     }
+
+    suspend fun saveUser(user: User) {
+        userDao.insert(user)
+    }
 }
