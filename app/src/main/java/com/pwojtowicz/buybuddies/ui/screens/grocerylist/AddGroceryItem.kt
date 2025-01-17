@@ -87,28 +87,28 @@ fun AddGroceryItem(
                 ) {
                     item {
                         BBOutlinedTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
                             value = itemName,
                             onValueChange = {
                                 itemName = it
                                 isError = it.isEmpty()
                             },
                             isError = isError,
-                            label = { Text(if (isError) "Item Name - Required" else "Item Name") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                            label = { Text(if (isError) "Item Name - Required" else "Item Name") }
                         )
                     }
                     item {
                         BBOutlinedTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
                             value = itemQuantity,
                             onValueChange = { itemQuantity = it },
                             isError = false,
                             label = { Text("Quantity") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
                     item {
