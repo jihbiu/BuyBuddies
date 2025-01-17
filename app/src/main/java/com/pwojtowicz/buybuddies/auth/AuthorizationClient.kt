@@ -10,36 +10,47 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.pwojtowicz.buybuddies.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthorizationClient(
-    private val context: Context,
+class AuthorizationClient @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val oneTapClient: SignInClient
 ) {
     private val auth = FirebaseAuth.getInstance()
 
     suspend fun signIn(): IntentSender? {
+        Log.d("AuthClient", "Starting sign in process")
         val result = try {
-            oneTapClient.beginSignIn(buildSignInRequest())
+            Log.d("AuthClient", "Building sign in request")
+            val request = buildSignInRequest()
+            Log.d("AuthClient", "Beginning sign in with request")
+            oneTapClient.beginSignIn(request)
                 .await()
+                .also { Log.d("AuthClient", "Sign in result received: $it") }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("AuthClient", "Error during sign in", e)
             null
         }
+        Log.d("AuthClient", "Returning intent sender: ${result?.pendingIntent?.intentSender}")
         return result?.pendingIntent?.intentSender
     }
 
     private fun buildSignInRequest(): BeginSignInRequest {
+        val clientId = context.getString(R.string.web_client_id)
         return BeginSignInRequest.Builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.web_client_id))
+                    .setServerClientId(clientId)
                     .build()
+                    .also { Log.d("AuthClient", "Built token request options") }
             )
             .setAutoSelectEnabled(false)
             .build()
+            .also { Log.d("AuthClient", "Built complete sign in request") }
     }
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
@@ -143,11 +154,11 @@ class AuthorizationClient(
         )
     }
 
-    suspend fun getIdToken(): String? {
+    suspend fun getIdToken(forceRefresh: Boolean = false): String? {
         return try {
-            auth.currentUser?.getIdToken(false)?.await()?.token
+            auth.currentUser?.getIdToken(forceRefresh)?.await()?.token
         } catch (e: Exception) {
-            Log.e(TAG, "Error during getting id token", e)
+            Log.e(TAG, "Error getting id token", e)
             null
         }
     }

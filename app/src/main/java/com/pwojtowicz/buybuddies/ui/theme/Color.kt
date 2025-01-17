@@ -55,5 +55,5 @@ val bb_theme_reject_red = Color(0xFFB93131)
 val DarkBackgroundColor = Color(0xFF2E2E2E)
 val DarkSurfaceColor = Color(0xFF2B2B2C)
 
-val bb_theme_accent_color = Color(0x34095851)
+//val bb_theme_accent_color = Color(0x34095851)
 

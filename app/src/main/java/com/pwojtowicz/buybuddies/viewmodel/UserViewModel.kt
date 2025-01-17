@@ -1,11 +1,13 @@
 package com.pwojtowicz.buybuddies.viewmodel
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.repository.UserRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class UserViewModel(application: BuyBuddiesApplication): ViewModel() {
-    private val userRepository = UserRepository(application)
+@HiltViewModel
+class UserViewModel @Inject constructor(
+    private val userRepository: UserRepository
+): ViewModel() {
 
 }

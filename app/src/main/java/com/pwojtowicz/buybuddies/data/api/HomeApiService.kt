@@ -8,13 +8,11 @@ import retrofit2.http.Path
 interface HomeApiService {
     @GET("api/homes/owner/{ownerId}/")
     suspend fun getHomesByOwner(
-        @Path("ownerId") ownerId: String,
-        @Header("Authorization") authHeader: String
+        @Path("ownerId") ownerId: String
     ): List<HomeDTO>
 
     @GET("api/homes/member/{userId}")
     suspend fun getHomesByMember(
-        @Path("userId") userId: String,
-        @Header("Authorization") authHeader: String
+        @Path("userId") userId: String
     ): List<HomeDTO>
 }

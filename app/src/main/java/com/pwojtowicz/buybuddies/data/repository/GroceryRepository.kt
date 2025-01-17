@@ -1,22 +1,21 @@
 package com.pwojtowicz.buybuddies.data.repository
 
-import android.app.Application
 import android.util.Log
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
-import com.pwojtowicz.buybuddies.data.db.BuyBuddiesDatabase
+import com.pwojtowicz.buybuddies.data.dao.GroceryListDao
+import com.pwojtowicz.buybuddies.data.dao.GroceryListItemDao
+import com.pwojtowicz.buybuddies.data.dao.GroceryListLabelDao
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 
-class GroceryRepository(private val application: BuyBuddiesApplication) {
-    private val buyBuddiesDB: BuyBuddiesDatabase = BuyBuddiesDatabase.getInstance(application)
-    private val groceryListDao = buyBuddiesDB.groceryListDao()
-    private val groceryItemDao = buyBuddiesDB.groceryListItemDao()
-    private val groceryListLabelDao = buyBuddiesDB.groceryListLabelDao()
-    private val depotDao = buyBuddiesDB.depotDao()
-    private val userDao = buyBuddiesDB.userDao()
+class GroceryRepository @Inject constructor (
+    private val groceryListDao: GroceryListDao,
+    private val groceryItemDao: GroceryListItemDao,
+    private val groceryListLabelDao: GroceryListLabelDao
+) {
 
     // ### Grocery List Operations ###
     fun getAllGroceryLists(): Flow<List<GroceryList>> = groceryListDao.getAllGroceryListsSorted()
@@ -50,5 +49,4 @@ class GroceryRepository(private val application: BuyBuddiesApplication) {
     fun getLabelsForList(listId: Long): Flow<List<GroceryListLabel>> {
         return groceryListLabelDao.getLabelsForList(listId)
     }
-
 }

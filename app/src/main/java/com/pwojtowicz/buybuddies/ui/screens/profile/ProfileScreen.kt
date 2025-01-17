@@ -19,7 +19,6 @@ import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.ui.components.ContainerCard
 @Composable
 fun ProfileScreen(
-    application: BuyBuddiesApplication,
     navController: NavHostController,
     paddingValues: PaddingValues
 ) {

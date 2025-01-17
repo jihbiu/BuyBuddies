@@ -1,21 +1,25 @@
 package com.pwojtowicz.buybuddies.viewmodel
 
-import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
+import com.pwojtowicz.buybuddies.data.enums.MeasurementUnit
 import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class GroceryViewModel(application: BuyBuddiesApplication): ViewModel() {
-   private val repository = GroceryRepository(application)
-
+@HiltViewModel
+class GroceryViewModel @Inject constructor(
+   private val repository: GroceryRepository
+): ViewModel() {
    private val _activeGroceryListId = MutableStateFlow<Long?>(null)
    val activeGroceryListId: StateFlow<Long?> = _activeGroceryListId
 
@@ -65,5 +69,27 @@ class GroceryViewModel(application: BuyBuddiesApplication): ViewModel() {
    fun toggleGroceryItemChecked(groceryListItem: GroceryListItem) {
       val updatedItem = groceryListItem.copy(isChecked = !groceryListItem.isChecked)
       updateGroceryItem(updatedItem)
+   }
+
+   fun updateGroceryItemName(groceryListItem: GroceryListItem, newName: String) {
+      updateGroceryItem(groceryListItem.copy(name = newName))
+   }
+
+   fun updateGroceryItemQuantity(groceryListItem: GroceryListItem, newQuantity: String) {
+      val quantity = newQuantity.toDoubleOrNull() ?: 0.0
+      updateGroceryItem(groceryListItem.copy(quantity = quantity))
+   }
+
+   fun updateGroceryItemUnit(groceryListItem: GroceryListItem, newUnit: String) {
+      try {
+         val unit = MeasurementUnit.valueOf(newUnit)
+         updateGroceryItem(groceryListItem.copy(unit = unit))
+      } catch (e: IllegalArgumentException) {
+         Log.w(TAG, "Invalid unit used: {}", e)
+      }
+   }
+
+   companion object {
+      private const val TAG = "GroceryViewModel"
    }
 }

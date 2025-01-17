@@ -1,38 +1,25 @@
 package com.pwojtowicz.buybuddies.data.repository
 
-import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
+import com.pwojtowicz.buybuddies.auth.AuthorizationClient
 import com.pwojtowicz.buybuddies.data.api.GroceryListApiService
-import com.pwojtowicz.buybuddies.data.api.ShiroApiClient
-import com.pwojtowicz.buybuddies.data.db.BuyBuddiesDatabase
+import com.pwojtowicz.buybuddies.data.dao.GroceryListDao
 import com.pwojtowicz.buybuddies.data.dto.GroceryListDTO
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
-import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import javax.inject.Inject
 
 
-class GroceryListRepository(
-    private val application: BuyBuddiesApplication
+class GroceryListRepository @Inject constructor(
+    private val authClient: AuthorizationClient,
+    private val groceryListApiService: GroceryListApiService,
+    private val groceryListDao: GroceryListDao
 ) {
-    private val buyBuddiesDB: BuyBuddiesDatabase = BuyBuddiesDatabase.getInstance(application)
-    private val groceryListDao = buyBuddiesDB.groceryListDao()
-
-    private suspend fun getService(): GroceryListApiService {
-        Log.d(TAG, "Getting grocery list service")
-        val token = application.authorizationClient.getIdToken()
-            ?: throw Exception("Failed to get ID token")
-        return ShiroApiClient.getGroceryListService(token)
-    }
-
     suspend fun fetchUserLists() {
         Log.i(TAG, "Fetching user's grocery lists")
         try {
-            val remoteLists = getService().getMyLists()
+            val remoteLists = groceryListApiService.getMyLists()
             Log.d(TAG, "Received ${remoteLists.size} lists from remote")
 
             val entities = remoteLists.map { dto ->
@@ -40,7 +27,7 @@ class GroceryListRepository(
                     name = dto.name,
                     description = dto.description,
                     ownerId = dto.ownerId,
-                    listStatus = dto.status ?: GroceryListStatus.ACTIVE.name,
+                    listStatus = dto.status,
                     updatedAt = System.currentTimeMillis(),
                     createdAt = System.currentTimeMillis().toString()
                 )
@@ -67,7 +54,7 @@ class GroceryListRepository(
             )
 
             // Create on remote
-            val createdList = getService().createGroceryList(dto)
+            val createdList = groceryListApiService.createGroceryList(dto)
             Log.d(TAG, "Successfully created list on remote with ID: ${createdList.id}")
 
             // Save to local DB
@@ -81,7 +68,7 @@ class GroceryListRepository(
     suspend fun addMember(listId: Long, memberFirebaseUid: String) {
         Log.i(TAG, "Adding member $memberFirebaseUid to list $listId")
         try {
-            val updatedList = getService().addMember(listId, memberFirebaseUid)
+            val updatedList = groceryListApiService.addMember(listId, memberFirebaseUid)
             groceryListDao.getById(listId)?.let { localList ->
                 groceryListDao.update(localList)
                 Log.i(TAG, "Successfully updated local list with new member")
@@ -95,7 +82,7 @@ class GroceryListRepository(
     suspend fun removeMember(listId: Long, memberFirebaseUid: String) {
         Log.i(TAG, "Removing member $memberFirebaseUid from list $listId")
         try {
-            val updatedList = getService().removeMember(listId, memberFirebaseUid)
+            val updatedList = groceryListApiService.removeMember(listId, memberFirebaseUid)
             groceryListDao.getById(listId)?.let { localList ->
                 groceryListDao.update(localList)
                 Log.i(TAG, "Successfully updated local list after member removal")
@@ -111,7 +98,7 @@ class GroceryListRepository(
     suspend fun deleteGroceryList(listId: Long) {
         Log.i(TAG, "Deleting grocery list: $listId")
         try {
-            getService().deleteGroceryList(listId)
+            groceryListApiService.deleteGroceryList(listId)
             Log.d(TAG, "Successfully deleted list from remote")
             groceryListDao.deleteById(listId)
             Log.i(TAG, "Successfully deleted list from local DB")

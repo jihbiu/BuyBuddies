@@ -1,8 +1,12 @@
 package com.pwojtowicz.buybuddies.data.prefernces
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class PreferencesManager(context: Context) {
+class PreferencesManager @Inject constructor(
+    @ApplicationContext context: Context
+) {
     private val prefs = context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
 
     var isFirstInstall: Boolean

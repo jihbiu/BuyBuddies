@@ -1,6 +1,5 @@
 package com.pwojtowicz.buybuddies.ui.screens.grocerylist
 
-import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pwojtowicz.buybuddies.BuyBuddiesApplication
@@ -29,20 +28,16 @@ import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.groceryitem.GroceryItemRow
 import com.pwojtowicz.buybuddies.viewmodel.GroceryViewModel
-import com.pwojtowicz.buybuddies.viewmodel.GroceryViewModelFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @Composable
 fun GroceryListScreen(
-    application: BuyBuddiesApplication,
     groceryListId: Long,
     navController: NavHostController,
     paddingValues: PaddingValues
 ) {
-    val viewModel: GroceryViewModel = viewModel(
-        factory = GroceryViewModelFactory(application)
-    )
+    val viewModel: GroceryViewModel = hiltViewModel()
     viewModel.setActiveGroceryListId(groceryListId)
 
     val groceryItemsList by viewModel.groceryListItemsList.collectAsState()
@@ -50,7 +45,6 @@ fun GroceryListScreen(
 
     val activeItems = groceryItemsList.filter { it.listId == groceryListId && !it.isChecked }
     val completedItems = groceryItemsList.filter { it.listId == groceryListId && it.isChecked }
-
 
     Box(modifier = Modifier.padding(paddingValues)) {
         if (showAddGroceryItem.collectAsState().value) {
@@ -90,7 +84,9 @@ fun GroceryListScreen(
                         GroceryItemRow(
                             groceryListItem = groceryItem,
                             onCheckedChange = { viewModel.toggleGroceryItemChecked(groceryItem) },
-                            onSaveChanges = { updatedItem -> viewModel.updateGroceryItem(updatedItem) },
+                            onNameChange = { viewModel.updateGroceryItemName(groceryItem, it) },
+                            onQuantityChange = { viewModel.updateGroceryItemQuantity(groceryItem, it) },
+                            onUnitChange = { viewModel.updateGroceryItemUnit(groceryItem, it) },
                             onDelete = { viewModel.deleteGroceryItem(groceryItem) }
                         )
                     }
@@ -107,7 +103,9 @@ fun GroceryListScreen(
                             GroceryItemRow(
                                 groceryListItem = groceryItem,
                                 onCheckedChange = { viewModel.toggleGroceryItemChecked(groceryItem) },
-                                onSaveChanges = { updatedItem -> viewModel.updateGroceryItem(updatedItem) },
+                                onNameChange = { viewModel.updateGroceryItemName(groceryItem, it) },
+                                onQuantityChange = { viewModel.updateGroceryItemQuantity(groceryItem, it) },
+                                onUnitChange = { viewModel.updateGroceryItemUnit(groceryItem, it) },
                                 onDelete = { viewModel.deleteGroceryItem(groceryItem) }
                             )
                         }
@@ -134,7 +132,6 @@ fun PreviewGroceryListScreen() {
     val navController = rememberNavController()
 
     GroceryListScreen(
-        application = application!!,
         groceryListId = 0,
         navController = navController,
         paddingValues = paddingValues

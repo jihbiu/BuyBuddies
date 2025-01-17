@@ -1,18 +1,22 @@
 package com.pwojtowicz.buybuddies.viewmodel
 
+import android.content.Intent
+import android.content.IntentSender
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseAuthException
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
+import com.pwojtowicz.buybuddies.auth.AuthorizationClient
 import com.pwojtowicz.buybuddies.auth.SignInResult
 import com.pwojtowicz.buybuddies.auth.SignInState
 import com.pwojtowicz.buybuddies.auth.UserData
 import com.pwojtowicz.buybuddies.data.api.AuthApiService
-import com.pwojtowicz.buybuddies.data.api.ShiroApiClient
 import com.pwojtowicz.buybuddies.data.dto.UserDTO
 import com.pwojtowicz.buybuddies.data.entity.User
+import com.pwojtowicz.buybuddies.data.prefernces.PreferencesManager
+import com.pwojtowicz.buybuddies.data.repository.GroceryListRepository
+import com.pwojtowicz.buybuddies.data.repository.UserRepository
+import com.pwojtowicz.buybuddies.ui.message.MessageViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,21 +25,30 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 import java.io.IOException
+import javax.inject.Inject
 
-class AuthViewModel(
-    private val application: BuyBuddiesApplication,
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authClient: AuthorizationClient,
+    private val preferencesManager: PreferencesManager,
+    private val userRepository: UserRepository,
+    private val groceryListRepository: GroceryListRepository,
+    private val messageViewModel: MessageViewModel,
+    private val authApiService: AuthApiService
 ) : ViewModel() {
-    private val authClient = application.authorizationClient
-    private val preferencesManager = application.preferencesManager
-
-    private val userRepository = application.userRepository
-    private val groceryListRepository = application.groceryListRepository
-
     private val _state = MutableStateFlow(SignInState())
     val state = _state.asStateFlow()
 
     init {
         checkIfSignedIn()
+    }
+
+    suspend fun signInWithIntent(intent: Intent): SignInResult {
+        return authClient.signInWithIntent(intent)
+    }
+
+    suspend fun signIn(): IntentSender? {
+        return authClient.signIn()
     }
 
     private fun checkIfSignedIn() {
@@ -51,19 +64,23 @@ class AuthViewModel(
 
 
     fun startSignIn(signInClick: () -> Unit) {
+        Log.d("AuthViewModel", "Starting sign in process")
         viewModelScope.launch {
             setLoading(true)
             try {
                 withTimeout(30_000) {
+                    Log.d("AuthViewModel", "Executing sign in click")
                     signInClick()
                 }
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error during sign in", e)
                 when (e) {
                     is TimeoutCancellationException -> handleError("Sign in timed out")
                     else -> handleError(e)
                 }
             } finally {
                 setLoading(false)
+                Log.d("AuthViewModel", "Sign in process completed")
             }
         }
     }
@@ -106,15 +123,10 @@ class AuthViewModel(
     }
 
     private suspend fun authenticateUser(result: SignInResult): UserDTO {
-        val idToken = authClient.getIdToken() ?: throw Exception("Failed to get ID token")
-        Log.d(TAG, "ID Token: $idToken")
-
-
-        val authService = ShiroApiClient.getAuthService(idToken)
         val userData = result.data!!
         val userDTO = createUserDTO(userData)
 
-        return authService.createOrUpdateUser(userDTO)
+        return authApiService.createOrUpdateUser(userDTO)
     }
 
 
