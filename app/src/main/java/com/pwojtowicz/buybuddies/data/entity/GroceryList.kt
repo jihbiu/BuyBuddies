@@ -1,10 +1,10 @@
 package com.pwojtowicz.buybuddies.data.entity
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 
 @Entity(
     tableName = "grocery_lists",
@@ -38,9 +38,9 @@ data class GroceryList(
     val description: String = "",
     val listStatus: String = GroceryListStatus.ACTIVE.name,
     var sortOrder: Int = 0,
-    val updatedAt: Long = System.currentTimeMillis(),
-    val createdAt: String = ""
-)
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity
 enum class GroceryListStatus {
     ACTIVE,
     DROPPED,

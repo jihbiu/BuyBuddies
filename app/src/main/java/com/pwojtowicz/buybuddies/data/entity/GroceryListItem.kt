@@ -4,7 +4,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 import com.pwojtowicz.buybuddies.data.enums.MeasurementUnit
+import com.pwojtowicz.buybuddies.data.enums.PurchaseStatus
+import java.time.LocalDateTime
 
 @Entity(
     tableName = "grocery_items",
@@ -22,17 +25,20 @@ import com.pwojtowicz.buybuddies.data.enums.MeasurementUnit
             onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index(value = ["listId"]), Index(value = ["categoryId"])]
+    indices = [
+        Index("listId"),
+        Index(value = ["listId", "name"], unique = true)
+    ]
 )
 data class GroceryListItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val listId: Long,
-    val name: String,
-    val description: String? = "",
-    val quantity: Double,
+    val listId: Long = 0,
+    val name: String = "",
+    val quantity: Double = 0.0,
     val unit: MeasurementUnit = MeasurementUnit.PIECE,
     val categoryId: Long? = null,
-    val isChecked: Boolean = false,
-    val lastUpdated: Long = System.currentTimeMillis()
-)
+    val purchaseStatus: PurchaseStatus = PurchaseStatus.PENDING,
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = LocalDateTime.now().toString()
+) : BaseEntity

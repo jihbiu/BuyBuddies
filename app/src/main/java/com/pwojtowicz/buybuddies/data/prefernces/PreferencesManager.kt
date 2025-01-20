@@ -15,7 +15,6 @@ class PreferencesManager @Inject constructor(
             prefs.edit().putBoolean(KEY_FIRST_INSTALL, value).apply()
         }
 
-
     companion object {
         private const val KEY_FIRST_INSTALL = "is_first_install"
     }

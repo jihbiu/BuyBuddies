@@ -34,16 +34,20 @@ import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.GroceryListMenuSheet
 import com.pwojtowicz.buybuddies.ui.screens.home.container.MainListContainer
+import com.pwojtowicz.buybuddies.viewmodel.GroceryViewModel
 import com.pwojtowicz.buybuddies.viewmodel.HomeViewModel
+import com.pwojtowicz.buybuddies.viewmodel.SharedListsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    groceryListViewModel: GroceryViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
+    sharedListsViewModel: SharedListsViewModel = hiltViewModel()
 ) {
-    val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val filteredGroceryLists by viewModel.filteredGroceryLists.collectAsState()
     val groceryListLabels by viewModel.groceryListLabels.collectAsState()
@@ -72,6 +76,10 @@ fun HomeScreen(
             )
             viewModel.resetNewListId()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshGroceryLists()
     }
 
     uiState.error?.let { error ->

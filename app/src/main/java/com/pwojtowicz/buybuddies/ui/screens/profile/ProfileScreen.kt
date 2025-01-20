@@ -34,7 +34,7 @@ fun ProfileScreen(
                     .fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center){
-                    Text(text = "PLACE FOR LIST", fontSize = 32.sp)
+                    Text(text = "Future User Features", fontSize = 32.sp)
                 }
             }
         }

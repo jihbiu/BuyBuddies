@@ -3,6 +3,7 @@ package com.pwojtowicz.buybuddies.data.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 
 @Entity(
     tableName = "stored_items",
@@ -31,5 +32,6 @@ data class StoredItem(
     val unit: String,
     val categoryId: Long?,
     val expirationDate: Long?,
-    val lastUpdated: Long = System.currentTimeMillis()
-)
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity

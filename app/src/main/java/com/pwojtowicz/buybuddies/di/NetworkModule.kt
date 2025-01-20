@@ -1,12 +1,15 @@
 package com.pwojtowicz.buybuddies.di
 
 import android.content.Context
+import androidx.compose.ui.res.stringResource
 import com.pwojtowicz.buybuddies.auth.AuthorizationClient
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
+import com.pwojtowicz.buybuddies.R
 import com.pwojtowicz.buybuddies.auth.TokenInterceptor
 import com.pwojtowicz.buybuddies.data.api.AuthApiService
 import com.pwojtowicz.buybuddies.data.api.GroceryListApiService
+import com.pwojtowicz.buybuddies.data.api.GroceryListItemApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,7 +27,9 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideBaseUrl() = "http://192.168.0.108:8080"
+    fun provideBaseUrl(@ApplicationContext context: Context): String {
+        return context.getString(R.string.shiro_backend_ip)
+    }
 
     @Provides
     @Singleton
@@ -84,10 +89,15 @@ object NetworkModule {
         return retrofit.create(AuthApiService::class.java)
     }
 
-
     @Provides
     @Singleton
     fun provideGroceryListApiService(retrofit: Retrofit): GroceryListApiService {
         return retrofit.create(GroceryListApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGroceryListItemApiService(retrofit: Retrofit): GroceryListItemApiService {
+        return retrofit.create(GroceryListItemApiService::class.java)
     }
 }

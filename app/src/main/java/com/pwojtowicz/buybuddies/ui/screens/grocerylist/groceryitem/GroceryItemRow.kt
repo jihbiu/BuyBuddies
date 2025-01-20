@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
+import com.pwojtowicz.buybuddies.data.enums.MeasurementUnit
 import com.pwojtowicz.buybuddies.ui.components.BBDropdownMenu
 import com.pwojtowicz.buybuddies.ui.components.HorizontalScrollableTextField
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_background_clr_light
@@ -42,7 +43,7 @@ fun GroceryItemRow(
     onUnitChange: (String) -> Unit,
     onDelete: () -> Unit
 ) {1
-    val unitOptions = listOf("Unit", "kg", "g", "l", "ml")
+    val unitOptions = MeasurementUnit.values().map { it.toShortString() }
     var showMenu by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier
@@ -54,7 +55,7 @@ fun GroceryItemRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Checkbox(
-                checked = groceryListItem.isChecked,
+                checked = groceryListItem.purchaseStatus.toBoolean(),
                 onCheckedChange = onCheckedChange
             )
             Spacer(Modifier.width(8.dp))
@@ -73,10 +74,14 @@ fun GroceryItemRow(
 
             Spacer(Modifier.width(8.dp))
             BBDropdownMenu(
-                groceryListItem.unit.name,
+                groceryListItem.unit.toShortString(),
                 options = unitOptions,
                 label = "Unit",
-                onValueChange = { newUnit -> onUnitChange(newUnit) },
+                onValueChange = { newShortUnit  ->
+                    MeasurementUnit.values()
+                        .find { it.toShortString() == newShortUnit }
+                        ?.let { onUnitChange(it.name) }
+                },
                 textColor = bb_theme_text_clr_dark,
                 backgroundColor = bb_theme_background_clr_light,
                 dropdownItemColor = bb_theme_text_clr_dark,

@@ -7,8 +7,8 @@ import com.pwojtowicz.buybuddies.auth.AuthorizationClient
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
 import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
+import com.pwojtowicz.buybuddies.data.repository.GroceryListItemRepository
 import com.pwojtowicz.buybuddies.data.repository.GroceryListRepository
-import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
 import com.pwojtowicz.buybuddies.data.repository.HomeRepository
 import com.pwojtowicz.buybuddies.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authorizationClient: AuthorizationClient,
-    private val groceryRepository: GroceryRepository,
+    private val groceryListItemRepository: GroceryListItemRepository,
     private val groceryListRepository: GroceryListRepository,
     private val userRepository: UserRepository,
     private val homeRepository: HomeRepository,
@@ -43,7 +43,7 @@ class HomeViewModel @Inject constructor(
         emptyList()
     )
 
-    val groceryListLabels = groceryRepository.getAllGroceryListLabels().stateIn(
+    val groceryListLabels = groceryListItemRepository.getAllGroceryListLabels().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
@@ -56,13 +56,24 @@ class HomeViewModel @Inject constructor(
         lists.filter { groceryList ->
             (state.searchText.isEmpty() || groceryList.name.contains(state.searchText, ignoreCase = true)) &&
                     (state.selectedStatus == null || groceryList.listStatus == state.selectedStatus.name) &&
-                    (state.selectedLabel == null || groceryRepository.getLabelsForList(groceryList.id).first().contains(state.selectedLabel))
+                    (state.selectedLabel == null || groceryListItemRepository.getLabelsForList(groceryList.id).first().contains(state.selectedLabel))
         }
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
     )
+
+    fun refreshGroceryLists() {
+        viewModelScope.launch {
+            try {
+                groceryListRepository.fetchUserLists()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing grocery lists", e)
+            }
+        }
+    }
+
 
     // UI State Updates
     private fun updateUiState(update: (HomeUiState) -> HomeUiState) {
@@ -146,7 +157,7 @@ class HomeViewModel @Inject constructor(
     fun getLabelByListId(id: Long) {
         viewModelScope.launch {
             try {
-                groceryRepository.getLabelById(id).collect { label ->
+                groceryListItemRepository.getLabelById(id).collect { label ->
                     updateUiState { it.copy(selectedLabel = label) }
                 }
             } catch (e: Exception) {

@@ -2,11 +2,13 @@ package com.pwojtowicz.buybuddies.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 import com.pwojtowicz.buybuddies.data.enums.MemberRole
 
 @Entity(
     tableName = "grocery_list_members",
-    primaryKeys = ["groceryListId", "userId"],
+    primaryKeys = ["groceryListId", "memberId"],
     foreignKeys = [
         ForeignKey(
             entity = GroceryList::class,
@@ -17,13 +19,15 @@ import com.pwojtowicz.buybuddies.data.enums.MemberRole
         ForeignKey(
             entity = User::class,
             parentColumns = ["firebaseUid"],
-            childColumns = ["userId"],
+            childColumns = ["memberId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class GroceryListMember(
     val groceryListId: Long,
-    val userId: String,
-    val role: MemberRole = MemberRole.MEMBER
-)
+    val memberId: String,
+//    val role: MemberRole = MemberRole.MEMBER,
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity

@@ -16,11 +16,17 @@ interface GroceryListItemDao {
     @Query("SELECT * FROM grocery_items WHERE id = :id")
     fun getById(id: Long): Flow<GroceryListItem>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(groceryListItem: GroceryListItem)
+    @Query("SELECT EXISTS(SELECT 1 FROM grocery_items WHERE name = :name AND listId = :listId)")
+    suspend fun  exists(name: String, listId: Long): Boolean
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(groceryListItems: List<GroceryListItem>)
+    @Query("SELECT EXISTS(SELECT 1 FROM grocery_items WHERE listId = :listId AND name = :name)")
+    suspend fun existsByListIdAndName(listId: Long, name: String): Boolean
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(groceryListItem: GroceryListItem): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(items: List<GroceryListItem>)
 
     @Update
     suspend fun update(groceryListItem: GroceryListItem)
@@ -30,4 +36,10 @@ interface GroceryListItemDao {
 
     @Query("DELETE FROM grocery_items")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun syncItems(items: List<GroceryListItem>) {
+        deleteAll()
+        insertAll(items)
+    }
 }

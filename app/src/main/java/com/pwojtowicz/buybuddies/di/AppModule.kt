@@ -2,7 +2,7 @@ package com.pwojtowicz.buybuddies.di
 
 import android.content.Context
 import com.pwojtowicz.buybuddies.data.prefernces.PreferencesManager
-import com.pwojtowicz.buybuddies.ui.message.MessageViewModel
+import com.pwojtowicz.buybuddies.utility.InstallManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,5 +21,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMessageViewModel(): MessageViewModel = MessageViewModel()
+    fun provideInstallManager(
+        @ApplicationContext context: Context,
+        prefenceManager: PreferencesManager
+    ): InstallManager = InstallManager(context, prefenceManager)
 }

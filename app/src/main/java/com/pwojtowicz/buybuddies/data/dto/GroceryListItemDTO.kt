@@ -1,15 +1,16 @@
 package com.pwojtowicz.buybuddies.data.dto
 
+import com.pwojtowicz.buybuddies.data.entity.base.BaseDto
 import com.pwojtowicz.buybuddies.data.enums.PurchaseStatus
 
 
 data class GroceryListItemDTO(
-    val id: Long,
+    val id: Long = 0,
     val groceryListId: Long,
-//    val groceryItemId: Long,
     val groceryItemName: String,
     val quantity: Double,
     val unit: String,
-    val notes: String?,
-    val status: PurchaseStatus,
-)
+    val status: PurchaseStatus = PurchaseStatus.PENDING,
+    override val updatedAt: Long?,
+    override val createdAt: String?
+) : BaseDto

@@ -45,7 +45,7 @@ import com.pwojtowicz.buybuddies.data.entity.UserAvatar
         GroceryListItem::class,
         ItemCategory::class
     ],
-    version = 2,
+    version = 5,
     exportSchema = false
 )
 abstract class BuyBuddiesDatabase : RoomDatabase() {

@@ -2,6 +2,8 @@ package com.pwojtowicz.buybuddies.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 import com.pwojtowicz.buybuddies.data.enums.MemberRole
 
 
@@ -20,5 +22,7 @@ import com.pwojtowicz.buybuddies.data.enums.MemberRole
 data class DepotMember(
     val depotId: Long,
     val userId: String,
-    val role: MemberRole = MemberRole.MEMBER
-)
+    val role: MemberRole = MemberRole.MEMBER,
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity
