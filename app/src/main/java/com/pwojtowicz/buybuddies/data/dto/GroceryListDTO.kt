@@ -1,5 +1,7 @@
 package com.pwojtowicz.buybuddies.data.dto
 
+import com.pwojtowicz.buybuddies.data.entity.base.BaseDto
+
 data class GroceryListDTO(
     val id: Long = 0,
     val name: String,
@@ -8,4 +10,6 @@ data class GroceryListDTO(
     val homeId: Long?,
     val status: String,
     val memberIds: Set<String> = emptySet(),
-)
+    override val updatedAt: Long,
+    override val createdAt: String
+) : BaseDto

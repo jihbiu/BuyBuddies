@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pwojtowicz.buybuddies.data.entity.GroceryListItem
+import com.pwojtowicz.buybuddies.data.enums.PurchaseStatus
 
 @Composable
 fun GroceryItemRow(
@@ -37,13 +38,13 @@ fun GroceryItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onItemCheckChanged(groceryListItem.copy(isChecked = !groceryListItem.isChecked)) },
+            .clickable { onItemCheckChanged(groceryListItem.copy(purchaseStatus = groceryListItem.purchaseStatus)) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = groceryListItem.isChecked,
-            onCheckedChange = { isChecked ->
-                onItemCheckChanged(groceryListItem.copy(isChecked = isChecked))
+            checked = groceryListItem.purchaseStatus.toBoolean(),
+            onCheckedChange = { purchaseStatus ->
+                onItemCheckChanged(groceryListItem.copy(purchaseStatus = PurchaseStatus.fromBoolean(purchaseStatus)))
             }
         )
         Spacer(modifier = Modifier.width(8.dp))

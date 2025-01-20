@@ -2,6 +2,7 @@ package com.pwojtowicz.buybuddies.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 import com.pwojtowicz.buybuddies.data.enums.MemberRole
 
 @Entity(
@@ -25,5 +26,7 @@ import com.pwojtowicz.buybuddies.data.enums.MemberRole
 data class HomeMember(
     val homeId: Long,
     val userId: String,
-    val role: MemberRole = MemberRole.MEMBER
-)
+    val role: MemberRole = MemberRole.MEMBER,
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity

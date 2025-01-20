@@ -72,16 +72,16 @@ fun AddGroceryList(
                 )
 
                 BBOutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
                     value = listName,
                     onValueChange = { newValue ->
                         listName = newValue
                         isError = newValue.isEmpty()
                     },
                     isError = isError,
-                    label = { Text(if (isError) "List Name - Required" else "List Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                    label = { Text(if (isError) "List Name - Required" else "List Name") }
                 )
 
                 Spacer(Modifier.weight(1.0f))

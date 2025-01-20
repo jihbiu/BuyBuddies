@@ -45,7 +45,7 @@ import com.pwojtowicz.buybuddies.data.entity.UserAvatar
         GroceryListItem::class,
         ItemCategory::class
     ],
-    version = 2,
+    version = 5,
     exportSchema = false
 )
 abstract class BuyBuddiesDatabase : RoomDatabase() {
@@ -58,23 +58,4 @@ abstract class BuyBuddiesDatabase : RoomDatabase() {
     abstract fun storedItemDao(): StoredItemDao
     abstract fun groceryListItemDao(): GroceryListItemDao
     abstract fun itemCategoryDao(): ItemCategoryDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: BuyBuddiesDatabase? = null
-
-        fun getInstance(context: Context): BuyBuddiesDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context,
-                    BuyBuddiesDatabase::class.java,
-                    "buybuddies_databases"
-                ).fallbackToDestructiveMigration()
-                 .build()
-                INSTANCE = instance
-                instance
-            }
-
-        }
-    }
 }

@@ -3,13 +3,15 @@ package com.pwojtowicz.buybuddies.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
+import com.pwojtowicz.buybuddies.auth.AuthorizationClient
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import com.pwojtowicz.buybuddies.data.entity.GroceryListLabel
 import com.pwojtowicz.buybuddies.data.entity.GroceryListStatus
-import com.pwojtowicz.buybuddies.data.repository.GroceryRepository
+import com.pwojtowicz.buybuddies.data.repository.GroceryListItemRepository
+import com.pwojtowicz.buybuddies.data.repository.GroceryListRepository
 import com.pwojtowicz.buybuddies.data.repository.HomeRepository
 import com.pwojtowicz.buybuddies.data.repository.UserRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,22 +20,21 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HomeViewModel(
-    private val application: BuyBuddiesApplication
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val authorizationClient: AuthorizationClient,
+    private val groceryListItemRepository: GroceryListItemRepository,
+    private val groceryListRepository: GroceryListRepository,
+    private val userRepository: UserRepository,
+    private val homeRepository: HomeRepository,
 ) : ViewModel() {
-    // Repositories
-    private val groceryRepository = GroceryRepository(application)
-    private val groceryListRepository = application.groceryListRepository
-    private val userRepository = UserRepository(application)
-    private val homeRepository = HomeRepository(application)
-
     // UI State
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Grocery Lists Data
-    private val currentUser = application.authorizationClient.getSignedInUser()
+    val currentUser = authorizationClient.getSignedInUser()
     val groceryLists = groceryListRepository.getListsForCurrentUser(
         currentUser?.firebaseUid ?: ""
     ).stateIn(
@@ -41,13 +42,8 @@ class HomeViewModel(
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
     )
-//    val groceryLists = groceryListRepository.getLocalGroceryLists().stateIn(
-//        viewModelScope,
-//        SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
-//        emptyList()
-//    )
 
-    val groceryListLabels = groceryRepository.getAllGroceryListLabels().stateIn(
+    val groceryListLabels = groceryListItemRepository.getAllGroceryListLabels().stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
@@ -60,13 +56,24 @@ class HomeViewModel(
         lists.filter { groceryList ->
             (state.searchText.isEmpty() || groceryList.name.contains(state.searchText, ignoreCase = true)) &&
                     (state.selectedStatus == null || groceryList.listStatus == state.selectedStatus.name) &&
-                    (state.selectedLabel == null || groceryRepository.getLabelsForList(groceryList.id).first().contains(state.selectedLabel))
+                    (state.selectedLabel == null || groceryListItemRepository.getLabelsForList(groceryList.id).first().contains(state.selectedLabel))
         }
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000L),
         emptyList()
     )
+
+    fun refreshGroceryLists() {
+        viewModelScope.launch {
+            try {
+                groceryListRepository.fetchUserLists()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing grocery lists", e)
+            }
+        }
+    }
+
 
     // UI State Updates
     private fun updateUiState(update: (HomeUiState) -> HomeUiState) {
@@ -102,7 +109,7 @@ class HomeViewModel(
     fun createGroceryList(name: String, description: String = "") {
         viewModelScope.launch {
             try {
-                val currentUser = application.authorizationClient.getSignedInUser()
+                val currentUser = authorizationClient.getSignedInUser()
                     ?: throw IllegalStateException("No user signed in")
 
                 val newGroceryList = GroceryList(
@@ -150,7 +157,7 @@ class HomeViewModel(
     fun getLabelByListId(id: Long) {
         viewModelScope.launch {
             try {
-                groceryRepository.getLabelById(id).collect { label ->
+                groceryListItemRepository.getLabelById(id).collect { label ->
                     updateUiState { it.copy(selectedLabel = label) }
                 }
             } catch (e: Exception) {

@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.flowlayout.FlowRow
+import com.pwojtowicz.buybuddies.data.enums.MeasurementUnit
 import com.pwojtowicz.buybuddies.ui.components.BBOutlinedTextField
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_card_clr_light
 import com.pwojtowicz.buybuddies.ui.theme.bb_theme_text_clr_dark
@@ -42,17 +43,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun AddGroceryItem(
     isVisible: MutableStateFlow<Boolean>,
     onDismiss: () -> Unit,
-    onAddItem: (String, Double, String) -> Unit
+    onAddItem: (String, Double, MeasurementUnit) -> Unit
 ) {
     val isCardVisible by isVisible.collectAsState()
     var itemName by remember { mutableStateOf("") }
     var itemQuantity by remember { mutableStateOf("") }
-    var selectedUnit by remember { mutableStateOf("Unit") }
+
+    var selectedUnit by remember { mutableStateOf(MeasurementUnit.PIECE) }
+    val unitOptions = MeasurementUnit.values()
+    var selectedUnitOption by remember { mutableStateOf(unitOptions[0]) }
 
     var isError by remember { mutableStateOf(false) }
-
-    val unitOptions = listOf("Unit", "kg", "g", "l", "ml")
-    var selectedUnitOption by remember { mutableStateOf(unitOptions[0]) }
 
     if (isCardVisible) {
         ModalBottomSheet(
@@ -87,28 +88,28 @@ fun AddGroceryItem(
                 ) {
                     item {
                         BBOutlinedTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
                             value = itemName,
                             onValueChange = {
                                 itemName = it
                                 isError = it.isEmpty()
                             },
                             isError = isError,
-                            label = { Text(if (isError) "Item Name - Required" else "Item Name") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                            label = { Text(if (isError) "Item Name - Required" else "Item Name") }
                         )
                     }
                     item {
                         BBOutlinedTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
                             value = itemQuantity,
                             onValueChange = { itemQuantity = it },
                             isError = false,
                             label = { Text("Quantity") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
                     item {
@@ -129,15 +130,15 @@ fun AddGroceryItem(
                             ) {
                                 unitOptions.forEach { unit ->
                                     OutlinedButton(
-                                        onClick = { selectedUnitOption = unit },
+                                        onClick = { selectedUnit = unit },
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = if (selectedUnitOption == unit) ButtonDefaults.outlinedButtonColors(
+                                        colors = if (selectedUnit == unit) ButtonDefaults.outlinedButtonColors(
                                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                         ) else ButtonDefaults.outlinedButtonColors(),
                                         modifier = Modifier.padding(horizontal = 4.dp)
                                     ) {
                                         Text(
-                                            unit,
+                                            unit.toShortString(),
                                             fontSize = 14.sp,
                                             color = Color.DarkGray
                                         )
@@ -174,7 +175,7 @@ fun AddGroceryItem(
                                 isError = true
                             } else {
                                 val quantity = itemQuantity.toDoubleOrNull() ?: 0.0
-                                onAddItem(itemName, quantity, selectedUnitOption)
+                                onAddItem(itemName, quantity, selectedUnit)
                                 isVisible.value = false
                             }
                         },

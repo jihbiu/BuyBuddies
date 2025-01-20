@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.pwojtowicz.buybuddies.data.entity.GroceryList
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +16,18 @@ interface GroceryListDao {
     @Query("SELECT * FROM grocery_lists")
     fun getAll(): Flow<List<GroceryList>>
 
-    @Query("SELECT * FROM grocery_lists WHERE ownerId = :userId")
+//    @Query("SELECT * FROM grocery_lists WHERE ownerId = :userId")
+//    fun getListsForUser(userId: String): Flow<List<GroceryList>>
+
+    @Query("""
+        SELECT * FROM grocery_lists
+        WHERE ownerId = :userId
+           OR id IN (
+               SELECT groceryListId 
+               FROM grocery_list_members
+               WHERE memberId = :userId
+           )
+    """)
     fun getListsForUser(userId: String): Flow<List<GroceryList>>
 
     @Query("SELECT * FROM grocery_lists WHERE homeId = :homeId")
@@ -65,4 +77,16 @@ interface GroceryListDao {
 
     @Query("DELETE FROM grocery_lists WHERE id = :groceryListId")
     suspend fun deleteById(groceryListId: Long)
+
+    @Transaction
+    suspend fun syncLists(lists: List<GroceryList>) {
+        deleteAll()
+        insertAll(lists)
+    }
+
+    @Query("SELECT name FROM grocery_lists WHERE id = :groceryListId")
+    suspend fun getListNameById(groceryListId: Long): String?
+
+    @Query("UPDATE grocery_lists SET name = :newName WHERE id = :listId")
+    suspend fun updateListName(listId: Long, newName: String)
 }

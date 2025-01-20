@@ -9,6 +9,9 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 
 interface AuthApiService {
+    @GET("api/users")
+    suspend fun getUserData(): UserDTO
+
     @POST("api/users/create_update")
     suspend fun createOrUpdateUser(@Body userDTO: UserDTO): UserDTO
 

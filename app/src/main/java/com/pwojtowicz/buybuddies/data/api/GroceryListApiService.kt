@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface GroceryListApiService {
     // Get all lists (owned + member)
@@ -38,5 +39,29 @@ interface GroceryListApiService {
     suspend fun removeMember(
         @Path("listId") listId: Long,
         @Path("memberFirebaseUid") memberFirebaseUid: String
+    ): GroceryListDTO
+
+    @PUT("api/grocery-lists/{listId}/name")
+    suspend fun updateListName(
+        @Path("listId") listId: Long,
+        @Body name: String
+    ): GroceryListDTO
+
+    @GET("api/grocery-lists/{listId}/members")
+    suspend fun getListMembers(
+        @Path("listId") listId: Long
+    ): List<String>
+
+    @POST("api/grocery-lists/members/email")
+    suspend fun addMemberByEmail(
+        @Body listDto: GroceryListDTO,
+        @Query("memberEmail") email: String
+    ): GroceryListDTO
+
+
+    @DELETE("api/grocery-lists/{listId}/members")
+    suspend fun removeMemberByEmail(
+        @Path("listId") listId: Long,
+        @Query("email") email: String
     ): GroceryListDTO
 }

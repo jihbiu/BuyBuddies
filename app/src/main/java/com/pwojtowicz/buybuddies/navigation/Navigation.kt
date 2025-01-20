@@ -2,12 +2,15 @@ package com.pwojtowicz.buybuddies.navigation
 
 import LoginScreen
 import android.app.Activity.RESULT_OK
-import android.app.Application
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -16,9 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -26,40 +31,50 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
+import com.pwojtowicz.buybuddies.data.network.sync.DataSyncManager
 import com.pwojtowicz.buybuddies.navigation.menu.BottomMenu
 import com.pwojtowicz.buybuddies.navigation.menu.menudrawer.MenuDrawer
+import com.pwojtowicz.buybuddies.ui.screens.depots.DepotsScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.GroceryListScreen
 import com.pwojtowicz.buybuddies.ui.screens.home.HomeScreen
+import com.pwojtowicz.buybuddies.ui.screens.homes.HomesScreen
 import com.pwojtowicz.buybuddies.ui.screens.notifications.NotificationScreen
 import com.pwojtowicz.buybuddies.ui.screens.profile.ProfileScreen
 import com.pwojtowicz.buybuddies.ui.screens.scanner.ScannerScreen
 import com.pwojtowicz.buybuddies.ui.screens.settings.SettingsScreen
 import com.pwojtowicz.buybuddies.viewmodel.AuthViewModel
-import com.pwojtowicz.buybuddies.viewmodel.AuthViewModelFactory
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @Composable
 fun Navigation(
-    application: BuyBuddiesApplication,
     navController: NavHostController = rememberNavController()
 ) {
-    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(application))
+    val authViewModel: AuthViewModel = hiltViewModel()
     val signInState by authViewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        Log.d("Navigation", "SignInState: isSignedIn=${signInState.isSignedIn}, isLoading=${signInState.isLoading}")
+    }
+
+    if (signInState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     NavHost(
         navController = navController,
         startDestination = if(signInState.isSignedIn) NavRoute.Main.route else NavRoute.Auth.route
     ) {
-        authNavigation(navController, application, authViewModel)
-        mainNavigation(navController, application, authViewModel)
+        authNavigation(navController)
+        mainNavigation(navController)
     }
 }
 
 private fun NavGraphBuilder.authNavigation(
-    navController: NavHostController,
-    application: BuyBuddiesApplication,
-    authViewModel: AuthViewModel
+    navController: NavHostController
 ) {
     navigation(
         startDestination = NavItems.Login.route,
@@ -67,9 +82,7 @@ private fun NavGraphBuilder.authNavigation(
     ) {
         composable(NavItems.Login.route) {
             AuthContent(
-                application = application,
-                navController = navController,
-                authViewModel = authViewModel
+                navController = navController
             )
         }
         composable(NavItems.Register.route) { }
@@ -78,9 +91,7 @@ private fun NavGraphBuilder.authNavigation(
 }
 
 private fun NavGraphBuilder.mainNavigation(
-    navController: NavHostController,
-    application: BuyBuddiesApplication,
-    authViewModel: AuthViewModel
+    navController: NavHostController
 ) {
     navigation(
         startDestination = NavItems.Main.route,
@@ -88,12 +99,9 @@ private fun NavGraphBuilder.mainNavigation(
     ) {
         composable(NavItems.Main.route) {
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
+                navController = navController
             ) { paddingValues ->
                 HomeScreen(
-                    application = application,
                     paddingValues = paddingValues,
                     navController = navController
                 )
@@ -103,12 +111,9 @@ private fun NavGraphBuilder.mainNavigation(
         composable("${NavItems.GroceryList.route}/{groceryListId}") { backStackEntry ->
             val groceryListId = backStackEntry.arguments?.getString("groceryListId") ?: ""
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
+                navController = navController
             ) { paddingValues ->
                 GroceryListScreen(
-                    application = application,
                     groceryListId = groceryListId.toLong(),
                     paddingValues = paddingValues,
                     navController = navController
@@ -118,12 +123,9 @@ private fun NavGraphBuilder.mainNavigation(
 
         composable(NavItems.Profile.route) {
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
+                navController = navController
             ) { paddingValues ->
                 ProfileScreen(
-                    application = application,
                     paddingValues = paddingValues,
                     navController = navController
                 )
@@ -132,31 +134,39 @@ private fun NavGraphBuilder.mainNavigation(
 
         composable(NavItems.Settings.route) {
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
-            ) { paddingValues ->
+                navController = navController
+            ) {
                 SettingsScreen()
             }
         }
 
         composable(NavItems.Notification.route) {
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
-            ) { paddingValues ->
+                navController = navController
+            ) {
                 NotificationScreen()
             }
         }
 
         composable(NavItems.Scanner.route) {
             MainContent(
-                navController = navController,
-                application = application,
-                authViewModel = authViewModel
-            ) { paddingValues ->
+                navController = navController
+            ) {
                 ScannerScreen()
+            }
+        }
+        composable(NavItems.Depot.route) {
+            MainContent(
+                navController = navController
+            ) {
+                DepotsScreen()
+            }
+        }
+        composable(NavItems.Home.route) {
+            MainContent(
+                navController = navController
+            ) {
+                HomesScreen()
             }
         }
     }
@@ -164,9 +174,8 @@ private fun NavGraphBuilder.mainNavigation(
 
 @Composable
 fun AuthContent(
-    application: BuyBuddiesApplication,
     navController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val signInState by authViewModel.state.collectAsStateWithLifecycle()
@@ -175,11 +184,9 @@ fun AuthContent(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult(),
         onResult = { result ->
-            if(result.resultCode == RESULT_OK){
+            if(result.resultCode == RESULT_OK) {
                 coroutineScope.launch {
-                    val signInResult = application.authorizationClient.signInWithIntent(
-                        intent = result.data ?: return@launch
-                    )
+                    val signInResult = authViewModel.signInWithIntent(result.data ?: return@launch)
                     authViewModel.onSignInResult(signInResult)
                 }
             }
@@ -204,10 +211,10 @@ fun AuthContent(
         onSignInClick = {
             authViewModel.startSignIn {
                 coroutineScope.launch {
-                    val signInIntentSender = application.authorizationClient.signIn()
+                    val signInIntentLauncher = authViewModel.signIn()
                     launcher.launch(
                         IntentSenderRequest.Builder(
-                            signInIntentSender ?: return@launch
+                            signInIntentLauncher ?: return@launch
                         ).build()
                     )
                 }
@@ -220,8 +227,6 @@ fun AuthContent(
 @Composable
 private fun MainContent(
     navController: NavHostController,
-    application: BuyBuddiesApplication,
-    authViewModel: AuthViewModel,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -232,9 +237,7 @@ private fun MainContent(
         drawerContent = {
             MenuDrawer(
                 navController = navController,
-                drawerState = drawerState,
-                application = application,
-                authViewModel = authViewModel
+                drawerState = drawerState
             )
         }
     ) {

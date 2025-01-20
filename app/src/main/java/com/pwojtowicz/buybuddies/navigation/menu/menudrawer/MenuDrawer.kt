@@ -16,9 +16,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.NavRoute
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
@@ -30,10 +30,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun MenuDrawer(
     navController: NavHostController,
-    drawerState: DrawerState,
-    application: BuyBuddiesApplication,
-    authViewModel: AuthViewModel
+    drawerState: DrawerState
 ) {
+    val authViewModel: AuthViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
 
     Surface(
@@ -128,9 +127,7 @@ fun MenuDrawerPreview() {
         Surface {
             MenuDrawer(
                 navController,
-                drawerState,
-                application = BuyBuddiesApplication(),
-                authViewModel = AuthViewModel(BuyBuddiesApplication())
+                drawerState
             )
         }
     }

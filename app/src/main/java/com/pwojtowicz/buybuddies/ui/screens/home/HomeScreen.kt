@@ -26,27 +26,28 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.pwojtowicz.buybuddies.BuyBuddiesApplication
 import com.pwojtowicz.buybuddies.navigation.NavItems
 import com.pwojtowicz.buybuddies.navigation.navigateToScreen
 import com.pwojtowicz.buybuddies.ui.screens.grocerylist.GroceryListMenuSheet
 import com.pwojtowicz.buybuddies.ui.screens.home.container.MainListContainer
+import com.pwojtowicz.buybuddies.viewmodel.GroceryViewModel
 import com.pwojtowicz.buybuddies.viewmodel.HomeViewModel
-import com.pwojtowicz.buybuddies.viewmodel.HomeViewModelFactory
+import com.pwojtowicz.buybuddies.viewmodel.SharedListsViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
-    application: BuyBuddiesApplication,
     navController: NavHostController,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    groceryListViewModel: GroceryViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
+    sharedListsViewModel: SharedListsViewModel = hiltViewModel()
 ) {
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(application))
     val uiState by viewModel.uiState.collectAsState()
     val filteredGroceryLists by viewModel.filteredGroceryLists.collectAsState()
     val groceryListLabels by viewModel.groceryListLabels.collectAsState()
@@ -77,9 +78,13 @@ fun HomeScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.refreshGroceryLists()
+    }
+
     uiState.error?.let { error ->
         LaunchedEffect(error) {
-            // TODO ERROR SNACKBAR
+            // TODO ERROR SNACK BAR
             viewModel.clearError()
         }
     }
@@ -169,11 +174,9 @@ fun HomeScreen(
 @Composable
 fun PreviewHomeScreen() {
     val paddingValues = PaddingValues(30.dp)
-    val application: BuyBuddiesApplication? = null
     val navController = rememberNavController()
 
     HomeScreen(
-        application = application!!,
         navController = navController,
         paddingValues = paddingValues
     )

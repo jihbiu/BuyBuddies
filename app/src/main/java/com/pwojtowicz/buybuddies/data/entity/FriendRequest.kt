@@ -3,6 +3,7 @@ package com.pwojtowicz.buybuddies.data.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 import com.pwojtowicz.buybuddies.data.enums.FriendRequestStatus
 
 
@@ -22,5 +23,6 @@ data class FriendRequest(
     val fromUserId: String,
     val toUserId: String,
     val status: FriendRequestStatus,
-    val createdAt: Long = System.currentTimeMillis()
-)
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity

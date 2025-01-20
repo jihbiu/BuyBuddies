@@ -24,7 +24,7 @@ interface DepotDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(depot: Depot)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(depots: List<Depot>)
 
     @Update

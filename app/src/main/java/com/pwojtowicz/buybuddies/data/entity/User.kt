@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.pwojtowicz.buybuddies.data.entity.base.BaseEntity
 
 @Entity(
     tableName = "users",
@@ -24,7 +25,9 @@ data class User(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val firebaseUid: String = "",
-    val username: String = "",
+    val name: String = "",
     val email: String,
     val avatarId: Long? = null,
-)
+    override val updatedAt: Long = System.currentTimeMillis(),
+    override val createdAt: String = ""
+) : BaseEntity
